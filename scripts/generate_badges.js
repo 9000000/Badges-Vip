@@ -1,73 +1,89 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
-const { GIFEncoder, quantize } = require('gifenc');
+const { GIFEncoder, applyPalette, quantize } = require('gifenc');
 
-const CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const BADGES_DIR = path.resolve(__dirname, '..', 'Badges');
-const TOTAL_FRAMES = 24;
-const DELAY = 50; // 50ms per frame = 20fps, smooth 1.2s seamless loop
+
+// Darpit Animated Deluxe V1.0 uses 150 frames at 30 ms per frame.
+// Only the opening frames move; the final frame is held for the rest of the loop.
+const TOTAL_FRAMES = 150;
+const DELAY = 30;
 const TARGET_HEIGHT = 150;
 
-// ============================================================
-// DARPIT DELUXE 3D ANIMATED STYLE
-// - Badge is STATIONARY (no jumping, no bouncing, no pop-in/out)
-// - Badge is ALWAYS VISIBLE (no fade in/out)
-// - 3D chiseled depth (extruded layers)
-// - Animated specular light sheen sweeps across the surface
-// - Darpit-signature twinkling diamond sparkles
-// - Per-badge unique surface animation (rainbow, lightning, etc.)
-// ============================================================
+const INTRO_FRAMES = {
+  glitch: 22, // 0.63 s: RGB/liquid glitch, used by source badges
+  burst: 16,  // 0.45 s: fast light burst, used by HDR/DTS badges
+  scan: 33,   // 0.96 s: directional cinematic scan
+  wave: 33,   // 0.96 s: audio-wave distortion
+  ink: 76     // 2.25 s: ink/smoke materialisation, used by resolution badges
+};
 
 const BADGES = [
   // Source
-  { png: 'remux.png', gif: 'remux.gif', effect: 'silver_sheen' },
-  { png: 'blu_ray_disc.png', gif: 'blu_ray_disc.gif', effect: 'silver_sheen' },
-  { png: 'WEBDL_transparent_4x.png', gif: 'WEBDL_transparent_4x.gif', effect: 'silver_sheen' },
-  { png: 'WEBRip_transparent_4x.png', gif: 'WEBRip_transparent_4x.gif', effect: 'silver_sheen' },
-  { png: 'HDTV_transparent_4x.png', gif: 'HDTV_transparent_4x.gif', effect: 'silver_sheen' },
-  { png: 'DVD_RIP_transparent_4x.png', gif: 'DVD_RIP_transparent_4x.gif', effect: 'silver_sheen' },
+  { png: 'remux.png', gif: 'remux.gif', effect: 'silver', intro: 'glitch' },
+  { png: 'blu_ray_disc.png', gif: 'blu_ray_disc.gif', effect: 'blue', intro: 'glitch' },
+  { png: 'WEBDL_transparent_4x.png', gif: 'WEBDL_transparent_4x.gif', effect: 'cyan', intro: 'glitch' },
+  { png: 'WEBRip_transparent_4x.png', gif: 'WEBRip_transparent_4x.gif', effect: 'purple', intro: 'glitch' },
+  { png: 'HDTV_transparent_4x.png', gif: 'HDTV_transparent_4x.gif', effect: 'cyan', intro: 'glitch' },
+  { png: 'DVD_RIP_transparent_4x.png', gif: 'DVD_RIP_transparent_4x.gif', effect: 'gold', intro: 'glitch' },
 
   // Resolution
-  { png: '4k_ultra_hd.png', gif: '4k_ultra_hd.gif', effect: 'gold_sheen' },
-  { png: '1080p_full_hd.png', gif: '1080p_full_hd.gif', effect: 'silver_sheen' },
-  { png: '720p_hd.png', gif: '720p_hd.gif', effect: 'silver_sheen' },
-  { png: '480p_sd.png', gif: '480p_sd.gif', effect: 'silver_sheen' },
+  { png: '4k_ultra_hd.png', gif: '4k_ultra_hd.gif', effect: 'green', intro: 'ink' },
+  { png: '1080p_full_hd.png', gif: '1080p_full_hd.gif', effect: 'blue', intro: 'ink' },
+  { png: '720p_hd.png', gif: '720p_hd.gif', effect: 'cyan', intro: 'ink' },
+  { png: '480p_sd.png', gif: '480p_sd.gif', effect: 'silver', intro: 'ink' },
 
-  // Video Tech
-  { png: 'dolby_vision.png', gif: 'dolby_vision.gif', effect: 'rainbow_prism' },
-  { png: 'hdr10_plus.png', gif: 'hdr10_plus.gif', effect: 'gold_sheen' },
-  { png: 'hdr10.png', gif: 'hdr10.gif', effect: 'gold_sheen' },
-  { png: 'hdr.png', gif: 'hdr.gif', effect: 'rainbow_prism' },
-  { png: 'SDR_transparent_4x.png', gif: 'SDR_transparent_4x.gif', effect: 'silver_sheen' },
-  { png: 'imax_enhanced.png', gif: 'imax_enhanced.gif', effect: 'blue_sheen' },
-  { png: 'imax.png', gif: 'imax.gif', effect: 'blue_sheen' },
+  // Video technology
+  { png: 'dolby_vision.png', gif: 'dolby_vision.gif', effect: 'rainbow', intro: 'scan' },
+  { png: 'hdr10_plus.png', gif: 'hdr10_plus.gif', effect: 'gold', intro: 'burst' },
+  { png: 'hdr10.png', gif: 'hdr10.gif', effect: 'gold', intro: 'burst' },
+  { png: 'hdr.png', gif: 'hdr.gif', effect: 'orange', intro: 'burst' },
+  { png: 'SDR_transparent_4x.png', gif: 'SDR_transparent_4x.gif', effect: 'silver', intro: 'burst' },
+  { png: 'imax_enhanced.png', gif: 'imax_enhanced.gif', effect: 'blue', intro: 'scan' },
+  { png: 'imax.png', gif: 'imax.gif', effect: 'blue', intro: 'scan' },
 
-  // Video Codec
-  { png: 'HEVC_transparent_4x.png', gif: 'HEVC_transparent_4x.gif', effect: 'green_sheen' },
-  { png: 'AVC_transparent_4x.png', gif: 'AVC_transparent_4x.gif', effect: 'silver_sheen' },
+  // Video codec
+  { png: 'HEVC_transparent_4x.png', gif: 'HEVC_transparent_4x.gif', effect: 'green', intro: 'glitch' },
+  { png: 'AVC_transparent_4x.png', gif: 'AVC_transparent_4x.gif', effect: 'purple', intro: 'glitch' },
 
-  // Bit Depth
-  { png: '10Bit_transparent_4x.png', gif: '10Bit_transparent_4x.gif', effect: 'rainbow_prism' },
-  { png: '8Bit_transparent_4x.png', gif: '8Bit_transparent_4x.gif', effect: 'silver_sheen' },
+  // Bit depth
+  { png: '10Bit_transparent_4x.png', gif: '10Bit_transparent_4x.gif', effect: 'rainbow', intro: 'burst' },
+  { png: '8Bit_transparent_4x.png', gif: '8Bit_transparent_4x.gif', effect: 'cyan', intro: 'burst' },
 
-  // Audio Tech
-  { png: 'dolby_atmos.png', gif: 'dolby_atmos.gif', effect: 'spatial_waves' },
-  { png: 'truehd.png', gif: 'truehd.gif', effect: 'silver_sheen' },
-  { png: 'dolby_digital_plus.png', gif: 'dolby_digital_plus.gif', effect: 'silver_sheen' },
-  { png: 'dolby_digital.png', gif: 'dolby_digital.gif', effect: 'silver_sheen' },
-  { png: 'dts_x.png', gif: 'dts_x.gif', effect: 'orange_sheen' },
-  { png: 'dts_hd_master_audio.png', gif: 'dts_hd_master_audio.gif', effect: 'gold_sheen' },
-  { png: 'dts_hd.png', gif: 'dts_hd.gif', effect: 'orange_sheen' },
-  { png: 'dts.png', gif: 'dts.gif', effect: 'orange_sheen' },
+  // Audio technology
+  { png: 'dolby_atmos.png', gif: 'dolby_atmos.gif', effect: 'cyan', intro: 'wave' },
+  { png: 'truehd.png', gif: 'truehd.gif', effect: 'blue', intro: 'wave' },
+  { png: 'dolby_digital_plus.png', gif: 'dolby_digital_plus.gif', effect: 'purple', intro: 'wave' },
+  { png: 'dolby_digital.png', gif: 'dolby_digital.gif', effect: 'blue', intro: 'wave' },
+  { png: 'dts_x.png', gif: 'dts_x.gif', effect: 'orange', intro: 'burst' },
+  { png: 'dts_hd_master_audio.png', gif: 'dts_hd_master_audio.gif', effect: 'gold', intro: 'burst' },
+  { png: 'dts_hd.png', gif: 'dts_hd.gif', effect: 'orange', intro: 'burst' },
+  { png: 'dts.png', gif: 'dts.gif', effect: 'orange', intro: 'burst' },
 
-  // Audio Channels
-  { png: '7_1_audio.png', gif: '7_1_audio.gif', effect: 'silver_sheen' },
-  { png: '5_1_audio.png', gif: '5_1_audio.gif', effect: 'silver_sheen' }
+  // Audio channels
+  { png: '7_1_audio.png', gif: '7_1_audio.gif', effect: 'cyan', intro: 'wave' },
+  { png: '5_1_audio.png', gif: '5_1_audio.gif', effect: 'cyan', intro: 'wave' }
 ];
 
 async function generateAll() {
-  console.log(`Starting generation of ${BADGES.length} DARPIT DELUXE 3D ANIMATED badges (stationary, sheen+sparkles)...`);
+  const onlyArg = process.argv.find(arg => arg.startsWith('--only='));
+  const only = onlyArg
+    ? new Set(onlyArg.slice('--only='.length).split(',').map(name => name.trim()).filter(Boolean))
+    : null;
+  const queue = only
+    ? BADGES.filter(item => only.has(item.gif) || only.has(item.png))
+    : BADGES;
+
+  if (queue.length === 0) {
+    throw new Error('No badges matched --only');
+  }
+
+  console.log(
+    `Generating ${queue.length} Darpit Animated Deluxe-style badges ` +
+    `(${TOTAL_FRAMES} frames, ${DELAY} ms, ${(TOTAL_FRAMES * DELAY / 1000).toFixed(1)} s loop)...`
+  );
 
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -77,260 +93,530 @@ async function generateAll() {
 
   const page = await browser.newPage();
 
-  for (let i = 0; i < BADGES.length; i++) {
-    const item = BADGES[i];
-    const pngPath = path.join(BADGES_DIR, item.png);
-    if (!fs.existsSync(pngPath)) {
-      console.error(`Missing PNG: ${pngPath}`);
-      continue;
-    }
-
-    console.log(`[${i + 1}/${BADGES.length}] ${item.png} -> ${item.gif} (${item.effect})...`);
-    const pngBase64 = fs.readFileSync(pngPath).toString('base64');
-    const imgSrc = `data:image/png;base64,${pngBase64}`;
-
-    const frames = await page.evaluate(async (src, effect, targetH, totalFrames) => {
-      const img = new Image();
-      img.src = src;
-      await new Promise(r => img.onload = r);
-
-      // Render source PNG to offscreen canvas
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = img.naturalWidth;
-      offCanvas.height = img.naturalHeight;
-      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
-      offCtx.imageSmoothingEnabled = true;
-      offCtx.imageSmoothingQuality = 'high';
-      offCtx.drawImage(img, 0, 0);
-
-      // Auto-crop to content bounding box
-      const imgData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-      const data = imgData.data;
-      let minX = offCanvas.width, minY = offCanvas.height, maxX = 0, maxY = 0;
-      for (let y = 0; y < offCanvas.height; y++) {
-        for (let x = 0; x < offCanvas.width; x++) {
-          if (data[(y * offCanvas.width + x) * 4 + 3] > 10) {
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-          }
-        }
+  try {
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i];
+      const pngPath = path.join(BADGES_DIR, item.png);
+      if (!fs.existsSync(pngPath)) {
+        throw new Error(`Missing PNG source: ${pngPath}`);
       }
 
-      const cropW = Math.max(1, maxX - minX + 1);
-      const cropH = Math.max(1, maxY - minY + 1);
-      const aspect = cropW / cropH;
-      const targetW = Math.round(targetH * aspect);
-      const padX = 25;
-      const padY = 20;
-      const canvasW = targetW + padX * 2;
-      const canvasH = targetH + padY * 2;
+      const activeFrames = INTRO_FRAMES[item.intro];
+      console.log(
+        `[${i + 1}/${queue.length}] ${item.png} -> ${item.gif} ` +
+        `(${item.intro}, ${(activeFrames * DELAY / 1000).toFixed(2)} s intro)...`
+      );
 
-      const canvas = document.createElement('canvas');
-      canvas.width = canvasW;
-      canvas.height = canvasH;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      const pngBase64 = fs.readFileSync(pngPath).toString('base64');
+      const imgSrc = `data:image/png;base64,${pngBase64}`;
 
-      const cx = canvasW / 2;
-      const cy = canvasH / 2;
-      const drawX = -targetW / 2;
-      const drawY = -targetH / 2;
+      // Render only the unique opening frames. The last frame is repeated during encoding,
+      // matching the long static hold used by the Darpit reference GIFs.
+      const frames = await page.evaluate(async (src, intro, effect, targetH, frameCount) => {
+        const img = new Image();
+        img.src = src;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = () => reject(new Error('Unable to decode PNG source'));
+        });
 
-      const rendered = [];
+        const sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = img.naturalWidth;
+        sourceCanvas.height = img.naturalHeight;
+        const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+        sourceCtx.imageSmoothingEnabled = true;
+        sourceCtx.imageSmoothingQuality = 'high';
+        sourceCtx.drawImage(img, 0, 0);
 
-      for (let f = 0; f < totalFrames; f++) {
-        const t = f / totalFrames; // 0..1 seamless loop progress
-        ctx.clearRect(0, 0, canvasW, canvasH);
-
-        ctx.save();
-        ctx.translate(cx, cy);
-
-        // ========== 1. STATIC 3D DROP SHADOW ==========
-        ctx.save();
-        ctx.translate(0, targetH * 0.44);
-        ctx.scale(1.0, 0.22);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, targetW * 0.46, targetH * 0.16, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-
-        // ========== 2. 3D CHISELED DEPTH EXTRUSION ==========
-        for (let d = 4; d >= 1; d--) {
-          const bCanvas = document.createElement('canvas');
-          bCanvas.width = canvasW;
-          bCanvas.height = canvasH;
-          const bCtx = bCanvas.getContext('2d');
-          bCtx.drawImage(offCanvas, minX, minY, cropW, cropH,
-            drawX + d + cx, drawY + d + cy, targetW, targetH);
-          bCtx.globalCompositeOperation = 'source-in';
-          bCtx.fillStyle = `rgba(8, 12, 22, ${0.82 + d * 0.04})`;
-          bCtx.fillRect(0, 0, canvasW, canvasH);
-          ctx.drawImage(bCanvas, -cx, -cy);
-        }
-
-        // ========== 3. FRONT FACE (CRISP, 100% SOLID) ==========
-        ctx.drawImage(offCanvas, minX, minY, cropW, cropH, drawX, drawY, targetW, targetH);
-
-        // ========== 4. ANIMATED SURFACE ILLUMINATION ==========
-        ctx.save();
-        ctx.globalCompositeOperation = 'source-atop';
-
-        if (effect === 'rainbow_prism') {
-          // Smooth rotating rainbow gradient overlay
-          const hue = (t * 360) % 360;
-          const grad = ctx.createLinearGradient(drawX, drawY, drawX + targetW, drawY + targetH);
-          grad.addColorStop(0, `hsla(${hue}, 100%, 75%, 0.4)`);
-          grad.addColorStop(0.25, `hsla(${(hue + 90) % 360}, 100%, 70%, 0.4)`);
-          grad.addColorStop(0.5, `hsla(${(hue + 180) % 360}, 100%, 70%, 0.4)`);
-          grad.addColorStop(0.75, `hsla(${(hue + 270) % 360}, 100%, 70%, 0.4)`);
-          grad.addColorStop(1, `hsla(${hue}, 100%, 75%, 0.4)`);
-          ctx.fillStyle = grad;
-          ctx.fillRect(drawX - 20, drawY - 20, targetW + 40, targetH + 40);
-        } else {
-          // Specular light beam sweep (Darpit signature)
-          const sheenProgress = (t * 1.2) % 1;
-          const sheenX = drawX - targetW * 0.4 + sheenProgress * (targetW * 1.8);
-          const sheenW = 100;
-
-          // Tint color based on effect
-          let sheenR = 255, sheenG = 255, sheenB = 255;
-          if (effect === 'gold_sheen') { sheenR = 255; sheenG = 220; sheenB = 140; }
-          else if (effect === 'blue_sheen') { sheenR = 140; sheenG = 200; sheenB = 255; }
-          else if (effect === 'green_sheen') { sheenR = 140; sheenG = 255; sheenB = 180; }
-          else if (effect === 'orange_sheen') { sheenR = 255; sheenG = 180; sheenB = 100; }
-
-          const sGrad = ctx.createLinearGradient(sheenX, drawY, sheenX + sheenW, drawY + targetH);
-          sGrad.addColorStop(0, `rgba(${sheenR}, ${sheenG}, ${sheenB}, 0)`);
-          sGrad.addColorStop(0.3, `rgba(${sheenR}, ${sheenG}, ${sheenB}, 0.12)`);
-          sGrad.addColorStop(0.5, `rgba(${sheenR}, ${sheenG}, ${sheenB}, 0.42)`);
-          sGrad.addColorStop(0.7, `rgba(${sheenR}, ${sheenG}, ${sheenB}, 0.12)`);
-          sGrad.addColorStop(1, `rgba(${sheenR}, ${sheenG}, ${sheenB}, 0)`);
-          ctx.fillStyle = sGrad;
-          ctx.fillRect(drawX - 20, drawY - 20, targetW + 40, targetH + 40);
-        }
-        ctx.restore();
-
-        // ========== 5. DARPIT DIAMOND SPARKLES ==========
-        const s1 = (t * 2) % 1;
-        drawDiamond(ctx, drawX + targetW * 0.95, drawY + targetH * 0.90, 11, s1, '#ffffff');
-        const s2 = (t * 2 + 0.5) % 1;
-        drawDiamond(ctx, drawX + targetW * 0.18, drawY + targetH * 0.20, 12, s2, '#fde047');
-
-        // ========== 6. OPTIONAL SPATIAL WAVES (Atmos) ==========
-        if (effect === 'spatial_waves') {
-          ctx.save();
-          ctx.translate(drawX + targetW * 0.14, drawY + targetH * 0.5);
-          for (let arc = 1; arc <= 3; arc++) {
-            const wave = (t + arc / 3) % 1;
-            const r = 10 + wave * 25;
-            ctx.strokeStyle = `rgba(56, 189, 248, ${0.7 - wave * 0.7})`;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 1.1 * Math.PI, 1.9 * Math.PI);
-            ctx.stroke();
+        const sourcePixels = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height).data;
+        let minX = sourceCanvas.width;
+        let minY = sourceCanvas.height;
+        let maxX = -1;
+        let maxY = -1;
+        for (let y = 0; y < sourceCanvas.height; y++) {
+          for (let x = 0; x < sourceCanvas.width; x++) {
+            if (sourcePixels[(y * sourceCanvas.width + x) * 4 + 3] > 10) {
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
           }
-          ctx.restore();
+        }
+        if (maxX < minX || maxY < minY) {
+          throw new Error('PNG source is fully transparent');
         }
 
-        ctx.restore(); // end translate(cx, cy)
+        const cropW = maxX - minX + 1;
+        const cropH = maxY - minY + 1;
+        const targetW = Math.max(1, Math.round(targetH * cropW / cropH));
+        const padX = 25;
+        const padY = 20;
+        const canvasW = targetW + padX * 2;
+        const canvasH = targetH + padY * 2;
 
-        const frameData = ctx.getImageData(0, 0, canvasW, canvasH);
-        rendered.push({
-          data: Array.from(frameData.data),
-          w: canvasW,
-          h: canvasH
+        const badgeCanvas = document.createElement('canvas');
+        badgeCanvas.width = canvasW;
+        badgeCanvas.height = canvasH;
+        const badgeCtx = badgeCanvas.getContext('2d');
+        badgeCtx.imageSmoothingEnabled = true;
+        badgeCtx.imageSmoothingQuality = 'high';
+        badgeCtx.drawImage(
+          sourceCanvas,
+          minX, minY, cropW, cropH,
+          padX, padY, targetW, targetH
+        );
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasW;
+        canvas.height = canvasH;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        const workCanvas = document.createElement('canvas');
+        workCanvas.width = canvasW;
+        workCanvas.height = canvasH;
+        const workCtx = workCanvas.getContext('2d');
+
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = canvasW;
+        maskCanvas.height = canvasH;
+        const maskCtx = maskCanvas.getContext('2d');
+
+        const accent = accentColor(effect);
+        const rendered = [];
+
+        for (let f = 0; f < frameCount; f++) {
+          const p = frameCount === 1 ? 1 : f / (frameCount - 1);
+          ctx.clearRect(0, 0, canvasW, canvasH);
+
+          if (f > 0) {
+            if (intro === 'ink') {
+              drawInkReveal(ctx, workCtx, maskCtx, badgeCanvas, canvasW, canvasH, targetW, targetH, p, f, accent);
+            } else if (intro === 'scan') {
+              drawScanReveal(ctx, badgeCanvas, canvasW, canvasH, p, accent);
+            } else if (intro === 'burst') {
+              drawBurstReveal(ctx, badgeCanvas, canvasW, canvasH, p, accent);
+            } else if (intro === 'wave') {
+              drawWaveReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else {
+              drawGlitchReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            }
+
+            drawSignatureDiamond(
+              ctx,
+              canvasW - Math.max(9, padX * 0.42),
+              canvasH - Math.max(9, padY * 0.48),
+              7,
+              smoothstep(0.28, 0.72, p)
+            );
+          }
+
+          if (f === frameCount - 1) {
+            ctx.clearRect(0, 0, canvasW, canvasH);
+            ctx.drawImage(badgeCanvas, 0, 0);
+            drawSignatureDiamond(
+              ctx,
+              canvasW - Math.max(9, padX * 0.42),
+              canvasH - Math.max(9, padY * 0.48),
+              7,
+              1
+            );
+          }
+
+          const frameData = ctx.getImageData(0, 0, canvasW, canvasH);
+          rendered.push({ data: Array.from(frameData.data), w: canvasW, h: canvasH });
+        }
+
+        return rendered;
+
+        function drawGlitchReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const reveal = smoothstep(0.02, 0.32, p);
+          const amplitude = (1 - eased) * Math.max(14, w * 0.1);
+          const slices = 14;
+          const sliceH = h / slices;
+
+          out.save();
+          out.globalAlpha = reveal;
+          out.filter = `blur(${Math.max(0, (1 - eased) * 1.8)}px)`;
+          for (let i = 0; i < slices; i++) {
+            const y = i * sliceH;
+            const jitter = (noise(i * 31 + frame * 17) - 0.5) * amplitude;
+            const wave = Math.sin(i * 1.71 + frame * 0.82) * amplitude * 0.35;
+            out.save();
+            out.beginPath();
+            out.rect(0, y, w, sliceH + 1);
+            out.clip();
+            out.drawImage(badge, jitter + wave, 0);
+            out.restore();
+          }
+          out.restore();
+
+          const split = (1 - eased) * Math.max(3, w * 0.018);
+          if (split > 0.4) {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = reveal * (1 - eased) * 0.72;
+            out.filter = 'hue-rotate(120deg) saturate(4)';
+            out.drawImage(badge, split, 0);
+            out.filter = 'hue-rotate(260deg) saturate(4)';
+            out.drawImage(badge, -split, 0);
+            out.restore();
+
+            out.save();
+            out.globalAlpha = (1 - eased) * 0.8;
+            out.fillStyle = color;
+            for (let i = 0; i < 5; i++) {
+              const y = noise(frame * 19 + i * 43) * h;
+              const lineW = w * (0.12 + noise(i * 67 + frame) * 0.38);
+              const x = noise(i * 97 + frame * 3) * (w - lineW);
+              out.fillRect(x, y, lineW, 1 + (i % 2));
+            }
+            out.restore();
+          }
+
+          if (p > 0.84) {
+            out.save();
+            out.globalAlpha = smoothstep(0.84, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawInkReveal(out, work, mask, badge, w, h, targetWidth, targetHeight, p, frame, color) {
+          const eased = easeInOutCubic(p);
+          const smokeFade = 1 - smoothstep(0.38, 0.86, p);
+
+          if (smokeFade > 0.01) {
+            out.save();
+            out.filter = `blur(${6 + (1 - eased) * 9}px)`;
+            out.globalCompositeOperation = 'screen';
+            for (let i = 0; i < 18; i++) {
+              const delay = (i % 7) * 0.035;
+              const life = clamp((p - delay) / Math.max(0.01, 1 - delay));
+              const x = w * (0.08 + 0.84 * noise(i * 41 + 7));
+              const drift = Math.sin(frame * 0.16 + i * 1.9) * targetWidth * 0.025;
+              const y = h * (0.25 + 0.62 * noise(i * 73 + 11)) - life * h * 0.12;
+              const radius = targetHeight * (0.06 + 0.22 * life + 0.08 * noise(i * 29));
+              const alpha = smokeFade * (0.08 + 0.16 * noise(i * 53));
+              out.fillStyle = i % 3 === 0
+                ? `rgba(255,255,255,${alpha})`
+                : rgba(color, alpha * 0.65);
+              out.beginPath();
+              out.arc(x + drift, y, radius, 0, Math.PI * 2);
+              out.fill();
+            }
+            out.restore();
+          }
+
+          mask.clearRect(0, 0, w, h);
+          mask.save();
+          mask.filter = `blur(${Math.max(1, (1 - eased) * 9)}px)`;
+          mask.fillStyle = '#fff';
+          for (let i = 0; i < 16; i++) {
+            const delay = (i % 8) * 0.045;
+            const q = clamp((p - delay) / Math.max(0.01, 0.72 - delay));
+            if (q <= 0) continue;
+            const x = w * (0.05 + 0.9 * noise(i * 47 + 3));
+            const y = h * (0.12 + 0.76 * noise(i * 83 + 5));
+            const radius = Math.max(w, h) * (0.035 + q * 0.24);
+            mask.beginPath();
+            mask.arc(x, y, radius, 0, Math.PI * 2);
+            mask.fill();
+          }
+          mask.restore();
+
+          work.clearRect(0, 0, w, h);
+          work.globalCompositeOperation = 'source-over';
+          work.drawImage(badge, 0, 0);
+          work.globalCompositeOperation = 'destination-in';
+          work.drawImage(maskCanvas, 0, 0);
+          work.globalCompositeOperation = 'source-over';
+          out.drawImage(workCanvas, 0, 0);
+
+          if (p < 0.12) {
+            const flash = (1 - p / 0.12) * 0.3;
+            const glow = out.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.58);
+            glow.addColorStop(0, `rgba(255,255,255,${flash})`);
+            glow.addColorStop(1, 'rgba(255,255,255,0)');
+            out.fillStyle = glow;
+            out.fillRect(0, 0, w, h);
+          }
+
+          if (p > 0.82) {
+            out.save();
+            out.globalAlpha = smoothstep(0.82, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawScanReveal(out, badge, w, h, p, color) {
+          const eased = easeOutCubic(p);
+          const edgeX = -w * 0.18 + eased * w * 1.36;
+          const skew = h * 0.24 * (1 - eased);
+
+          out.save();
+          out.beginPath();
+          out.moveTo(-20, -20);
+          out.lineTo(edgeX + skew, -20);
+          out.lineTo(edgeX - skew, h + 20);
+          out.lineTo(-20, h + 20);
+          out.closePath();
+          out.clip();
+          out.globalAlpha = smoothstep(0.02, 0.24, p);
+          out.filter = `blur(${(1 - eased) * 2.5}px)`;
+          out.drawImage(badge, -(1 - eased) * w * 0.035, 0);
+          out.restore();
+
+          if (p < 0.9) {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            const beam = out.createLinearGradient(edgeX - 28, 0, edgeX + 28, 0);
+            beam.addColorStop(0, 'rgba(255,255,255,0)');
+            beam.addColorStop(0.42, rgba(color, 0.55 * (1 - p)));
+            beam.addColorStop(0.5, `rgba(255,255,255,${0.9 * (1 - p)})`);
+            beam.addColorStop(0.58, rgba(color, 0.55 * (1 - p)));
+            beam.addColorStop(1, 'rgba(255,255,255,0)');
+            out.fillStyle = beam;
+            out.fillRect(edgeX - 30, 0, 60, h);
+            out.restore();
+          }
+
+          if (p > 0.86) {
+            out.save();
+            out.globalAlpha = smoothstep(0.86, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawBurstReveal(out, badge, w, h, p, color) {
+          const eased = easeOutBack(p);
+          const alpha = smoothstep(0.02, 0.34, p);
+          const scale = 0.72 + 0.28 * eased;
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.scale(scale, scale);
+          out.translate(-w / 2, -h / 2);
+          out.globalAlpha = alpha;
+          out.filter = `blur(${Math.max(0, (1 - p) * 4)}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          if (p < 0.78) {
+            out.save();
+            out.translate(w / 2, h / 2);
+            out.globalCompositeOperation = 'screen';
+            out.strokeStyle = color;
+            out.lineWidth = 1.4;
+            out.globalAlpha = (1 - p) * 0.62;
+            for (let i = 0; i < 14; i++) {
+              const angle = i / 14 * Math.PI * 2 + p * 0.7;
+              const inner = Math.min(w, h) * (0.12 + p * 0.18);
+              const outer = Math.max(w, h) * (0.24 + p * 0.42) * (0.72 + noise(i * 91) * 0.28);
+              out.beginPath();
+              out.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+              out.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+              out.stroke();
+            }
+            out.restore();
+          }
+
+          if (p > 0.82) {
+            out.save();
+            out.globalAlpha = smoothstep(0.82, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawWaveReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.02, 0.3, p);
+          const amplitude = (1 - eased) * Math.max(8, w * 0.045);
+          const slices = 18;
+          const sliceH = h / slices;
+
+          out.save();
+          out.globalAlpha = alpha;
+          for (let i = 0; i < slices; i++) {
+            const y = i * sliceH;
+            const offset = Math.sin(i * 0.82 + frame * 0.72) * amplitude;
+            out.save();
+            out.beginPath();
+            out.rect(0, y, w, sliceH + 1);
+            out.clip();
+            out.drawImage(badge, offset, 0);
+            out.restore();
+          }
+          out.restore();
+
+          if (p < 0.82) {
+            out.save();
+            out.strokeStyle = color;
+            out.lineWidth = 2;
+            out.globalAlpha = (1 - p) * 0.7;
+            for (let ring = 0; ring < 3; ring++) {
+              const radius = (p + ring * 0.16) * Math.min(w, h) * 0.72;
+              out.beginPath();
+              out.ellipse(w / 2, h / 2, radius * 1.9, radius * 0.7, 0, 0, Math.PI * 2);
+              out.stroke();
+            }
+            out.restore();
+          }
+
+          if (p > 0.84) {
+            out.save();
+            out.globalAlpha = smoothstep(0.84, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawSignatureDiamond(out, x, y, size, alpha) {
+          if (alpha <= 0) return;
+          out.save();
+          out.translate(x, y);
+          out.globalAlpha = alpha;
+          out.fillStyle = '#e5e7eb';
+          out.shadowColor = 'rgba(255,255,255,0.65)';
+          out.shadowBlur = 4;
+          out.beginPath();
+          out.moveTo(0, -size);
+          out.quadraticCurveTo(0, 0, size, 0);
+          out.quadraticCurveTo(0, 0, 0, size);
+          out.quadraticCurveTo(0, 0, -size, 0);
+          out.quadraticCurveTo(0, 0, 0, -size);
+          out.fill();
+          out.restore();
+        }
+
+        function accentColor(name) {
+          const colors = {
+            silver: '#f8fafc',
+            blue: '#38bdf8',
+            cyan: '#22d3ee',
+            purple: '#c084fc',
+            gold: '#facc15',
+            green: '#4ade80',
+            orange: '#fb923c',
+            rainbow: '#f472b6'
+          };
+          return colors[name] || colors.silver;
+        }
+
+        function rgba(hex, alpha) {
+          const value = Number.parseInt(hex.slice(1), 16);
+          const r = value >> 16;
+          const g = value >> 8 & 255;
+          const b = value & 255;
+          return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        function noise(seed) {
+          const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+          return x - Math.floor(x);
+        }
+
+        function clamp(value) {
+          return Math.max(0, Math.min(1, value));
+        }
+
+        function smoothstep(a, b, value) {
+          const x = clamp((value - a) / Math.max(0.0001, b - a));
+          return x * x * (3 - 2 * x);
+        }
+
+        function easeOutCubic(value) {
+          return 1 - Math.pow(1 - value, 3);
+        }
+
+        function easeInOutCubic(value) {
+          return value < 0.5
+            ? 4 * value * value * value
+            : 1 - Math.pow(-2 * value + 2, 3) / 2;
+        }
+
+        function easeOutBack(value) {
+          const c1 = 1.70158;
+          const c3 = c1 + 1;
+          return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
+        }
+      }, imgSrc, item.intro, item.effect, TARGET_HEIGHT, activeFrames);
+
+      const { w, h } = frames[0];
+      const encodedFrames = frames.map(frame => palettizeFrame(new Uint8Array(frame.data), w, h));
+      const finalFrame = encodedFrames[encodedFrames.length - 1];
+      const gif = GIFEncoder();
+
+      for (let f = 0; f < TOTAL_FRAMES; f++) {
+        const frame = f < encodedFrames.length ? encodedFrames[f] : finalFrame;
+        gif.writeFrame(frame.index, w, h, {
+          palette: frame.palette,
+          delay: DELAY,
+          repeat: 0,
+          transparent: true,
+          transparentIndex: 0,
+          dispose: 2
         });
       }
 
-      return rendered;
-
-      function drawDiamond(ctx, x, y, size, prog, glow) {
-        if (prog >= 0.85) return;
-        const a = Math.sin(prog / 0.85 * Math.PI);
-        const s = size * a;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(prog * Math.PI * 0.5);
-        ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
-        ctx.shadowColor = glow;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.moveTo(0, -s);
-        ctx.quadraticCurveTo(0, 0, s, 0);
-        ctx.quadraticCurveTo(0, 0, 0, s);
-        ctx.quadraticCurveTo(0, 0, -s, 0);
-        ctx.quadraticCurveTo(0, 0, 0, -s);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(0, 0, s * 0.22, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.restore();
-      }
-    }, imgSrc, item.effect, TARGET_HEIGHT, TOTAL_FRAMES);
-
-    // Encode GIF
-    const { w, h } = frames[0];
-    const gif = GIFEncoder();
-
-    for (let f = 0; f < TOTAL_FRAMES; f++) {
-      const data = new Uint8Array(frames[f].data);
-      const opaque = [];
-      for (let p = 0; p < data.length; p += 4) {
-        if (data[p + 3] >= 16) {
-          opaque.push(Math.max(1, data[p]), Math.max(1, data[p + 1]), Math.max(1, data[p + 2]), 255);
-        }
-      }
-
-      const subPalette = opaque.length > 0
-        ? quantize(new Uint8Array(opaque), 255, { format: 'rgb565' })
-        : [[255, 255, 255]];
-      const fullPalette = [[0, 0, 0], ...subPalette];
-
-      const index = new Uint8Array(w * h);
-      for (let p = 0, px = 0; p < data.length; p += 4, px++) {
-        if (data[p + 3] < 16) {
-          index[px] = 0;
-        } else {
-          const r = Math.max(1, data[p]);
-          const g = Math.max(1, data[p + 1]);
-          const b = Math.max(1, data[p + 2]);
-          let bestDist = Infinity, bestIdx = 1;
-          for (let c = 0; c < subPalette.length; c++) {
-            const dr = r - subPalette[c][0];
-            const dg = g - subPalette[c][1];
-            const db = b - subPalette[c][2];
-            const dist = dr * dr + dg * dg + db * db;
-            if (dist < bestDist) { bestDist = dist; bestIdx = c + 1; }
-          }
-          index[px] = bestIdx;
-        }
-      }
-
-      gif.writeFrame(index, w, h, {
-        palette: fullPalette,
-        delay: DELAY,
-        repeat: 0,
-        transparent: true,
-        transparentIndex: 0,
-        dispose: 2
-      });
+      gif.finish();
+      const buffer = Buffer.from(gif.bytes());
+      fs.writeFileSync(path.join(BADGES_DIR, item.gif), buffer);
+      console.log(` -> ${item.gif} (${w}x${h}, ${(buffer.length / 1024 / 1024).toFixed(2)} MB)`);
     }
-
-    gif.finish();
-    const outPath = path.join(BADGES_DIR, item.gif);
-    const buffer = Buffer.from(gif.bytes());
-    fs.writeFileSync(outPath, buffer);
-    console.log(` -> ${item.gif} (${w}x${h}, ${(buffer.length / 1024).toFixed(1)} KB)`);
+  } finally {
+    await browser.close();
   }
 
-  await browser.close();
-  console.log(`\n🎉 All ${BADGES.length} Darpit Deluxe 3D Animated badges generated!`);
+  console.log(`\nAll ${queue.length} Darpit Animated Deluxe-style badges generated.`);
 }
 
-generateAll().catch(console.error);
+function palettizeFrame(data, w, h) {
+  const opaque = [];
+
+  for (let p = 0; p < data.length; p += 4) {
+    if (data[p + 3] < 16) {
+      data[p] = 0;
+      data[p + 1] = 0;
+      data[p + 2] = 0;
+      data[p + 3] = 0;
+    } else {
+      data[p] = Math.max(1, data[p]);
+      data[p + 1] = Math.max(1, data[p + 1]);
+      data[p + 2] = Math.max(1, data[p + 2]);
+      data[p + 3] = 255;
+      opaque.push(data[p], data[p + 1], data[p + 2], 255);
+    }
+  }
+
+  const subPalette = opaque.length > 0
+    ? quantize(new Uint8Array(opaque), 255, { format: 'rgb565' })
+    : [[255, 255, 255]];
+  const palette = [[0, 0, 0], ...subPalette];
+  const index = applyPalette(data, palette, 'rgb565');
+
+  for (let p = 0, px = 0; p < data.length; p += 4, px++) {
+    if (data[p + 3] < 16) {
+      index[px] = 0;
+    } else if (index[px] === 0) {
+      index[px] = 1;
+    }
+  }
+
+  if (index.length !== w * h) {
+    throw new Error('Indexed frame dimensions are invalid');
+  }
+
+  return { index, palette };
+}
+
+generateAll().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
