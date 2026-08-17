@@ -14,7 +14,7 @@
 ### Link cấu hình trực tiếp:
 Sử dụng đường dẫn file cấu hình JSON sau trong ứng dụng của bạn (VidHub / Infuse / Media Player):
 ```text
-https://raw.githubusercontent.com/9000000/Badges-Vip/main/badges.json
+https://raw.githubusercontent.com/9000000/Badges-Vip/tet/badges.json
 ```
 
 ---
