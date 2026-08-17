@@ -7,10 +7,11 @@ const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const BADGES_DIR = path.resolve(__dirname, '..', 'Badges');
 
 // Darpit Animated Deluxe V1.0 uses 150 frames at 30 ms per frame.
-// Only the opening frames move; the final frame is held for the rest of the loop.
+// The opening follows the reference cadence, followed by a stronger animated hold.
 const TOTAL_FRAMES = 150;
 const DELAY = 30;
 const TARGET_HEIGHT = 150;
+const HOLD_FRAMES = 30;
 
 const INTRO_FRAMES = {
   glitch: 22, // 0.63 s: RGB/liquid glitch, used by source badges
@@ -110,9 +111,9 @@ async function generateAll() {
       const pngBase64 = fs.readFileSync(pngPath).toString('base64');
       const imgSrc = `data:image/png;base64,${pngBase64}`;
 
-      // Render only the unique opening frames. The last frame is repeated during encoding,
-      // matching the long static hold used by the Darpit reference GIFs.
-      const frames = await page.evaluate(async (src, intro, effect, targetH, frameCount) => {
+      // Render the unique opening plus a short reusable hold cycle. This keeps the
+      // 4.5-second loop active without rendering 150 unrelated frames per badge.
+      const frames = await page.evaluate(async (src, intro, effect, targetH, frameCount, holdFrameCount) => {
         const img = new Image();
         img.src = src;
         await new Promise((resolve, reject) => {
@@ -187,11 +188,12 @@ async function generateAll() {
         const accent = accentColor(effect);
         const rendered = [];
 
-        for (let f = 0; f < frameCount; f++) {
-          const p = frameCount === 1 ? 1 : f / (frameCount - 1);
+        const uniqueFrameCount = frameCount + holdFrameCount;
+        for (let f = 0; f < uniqueFrameCount; f++) {
           ctx.clearRect(0, 0, canvasW, canvasH);
 
-          if (f > 0) {
+          if (f > 0 && f < frameCount) {
+            const p = frameCount === 1 ? 1 : f / (frameCount - 1);
             if (intro === 'ink') {
               drawInkReveal(ctx, workCtx, maskCtx, badgeCanvas, canvasW, canvasH, targetW, targetH, p, f, accent);
             } else if (intro === 'scan') {
@@ -208,7 +210,7 @@ async function generateAll() {
               ctx,
               canvasW - Math.max(9, padX * 0.42),
               canvasH - Math.max(9, padY * 0.48),
-              7,
+              9,
               smoothstep(0.28, 0.72, p)
             );
           }
@@ -220,9 +222,12 @@ async function generateAll() {
               ctx,
               canvasW - Math.max(9, padX * 0.42),
               canvasH - Math.max(9, padY * 0.48),
-              7,
+              9,
               1
             );
+          } else if (f >= frameCount) {
+            const phase = (f - frameCount) / holdFrameCount;
+            drawHoldFrame(ctx, workCtx, badgeCanvas, canvasW, canvasH, phase, intro, accent);
           }
 
           const frameData = ctx.getImageData(0, 0, canvasW, canvasH);
@@ -234,17 +239,17 @@ async function generateAll() {
         function drawGlitchReveal(out, badge, w, h, p, frame, color) {
           const eased = easeOutCubic(p);
           const reveal = smoothstep(0.02, 0.32, p);
-          const amplitude = (1 - eased) * Math.max(14, w * 0.1);
-          const slices = 14;
+          const amplitude = (1 - eased) * Math.max(24, w * 0.16);
+          const slices = 20;
           const sliceH = h / slices;
 
           out.save();
           out.globalAlpha = reveal;
-          out.filter = `blur(${Math.max(0, (1 - eased) * 1.8)}px)`;
+          out.filter = `blur(${Math.max(0, (1 - eased) * 2.8)}px)`;
           for (let i = 0; i < slices; i++) {
             const y = i * sliceH;
             const jitter = (noise(i * 31 + frame * 17) - 0.5) * amplitude;
-            const wave = Math.sin(i * 1.71 + frame * 0.82) * amplitude * 0.35;
+            const wave = Math.sin(i * 1.71 + frame * 0.82) * amplitude * 0.52;
             out.save();
             out.beginPath();
             out.rect(0, y, w, sliceH + 1);
@@ -254,11 +259,11 @@ async function generateAll() {
           }
           out.restore();
 
-          const split = (1 - eased) * Math.max(3, w * 0.018);
+          const split = (1 - eased) * Math.max(6, w * 0.035);
           if (split > 0.4) {
             out.save();
             out.globalCompositeOperation = 'screen';
-            out.globalAlpha = reveal * (1 - eased) * 0.72;
+            out.globalAlpha = reveal * (1 - eased) * 0.9;
             out.filter = 'hue-rotate(120deg) saturate(4)';
             out.drawImage(badge, split, 0);
             out.filter = 'hue-rotate(260deg) saturate(4)';
@@ -266,13 +271,13 @@ async function generateAll() {
             out.restore();
 
             out.save();
-            out.globalAlpha = (1 - eased) * 0.8;
+            out.globalAlpha = (1 - eased) * 0.95;
             out.fillStyle = color;
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 9; i++) {
               const y = noise(frame * 19 + i * 43) * h;
               const lineW = w * (0.12 + noise(i * 67 + frame) * 0.38);
               const x = noise(i * 97 + frame * 3) * (w - lineW);
-              out.fillRect(x, y, lineW, 1 + (i % 2));
+              out.fillRect(x, y, lineW, 1 + (i % 3));
             }
             out.restore();
           }
@@ -291,19 +296,19 @@ async function generateAll() {
 
           if (smokeFade > 0.01) {
             out.save();
-            out.filter = `blur(${6 + (1 - eased) * 9}px)`;
+            out.filter = `blur(${8 + (1 - eased) * 13}px)`;
             out.globalCompositeOperation = 'screen';
-            for (let i = 0; i < 18; i++) {
+            for (let i = 0; i < 28; i++) {
               const delay = (i % 7) * 0.035;
               const life = clamp((p - delay) / Math.max(0.01, 1 - delay));
               const x = w * (0.08 + 0.84 * noise(i * 41 + 7));
               const drift = Math.sin(frame * 0.16 + i * 1.9) * targetWidth * 0.025;
               const y = h * (0.25 + 0.62 * noise(i * 73 + 11)) - life * h * 0.12;
-              const radius = targetHeight * (0.06 + 0.22 * life + 0.08 * noise(i * 29));
-              const alpha = smokeFade * (0.08 + 0.16 * noise(i * 53));
+              const radius = targetHeight * (0.08 + 0.3 * life + 0.1 * noise(i * 29));
+              const alpha = smokeFade * (0.12 + 0.24 * noise(i * 53));
               out.fillStyle = i % 3 === 0
                 ? `rgba(255,255,255,${alpha})`
-                : rgba(color, alpha * 0.65);
+                : rgba(color, alpha * 0.82);
               out.beginPath();
               out.arc(x + drift, y, radius, 0, Math.PI * 2);
               out.fill();
@@ -315,13 +320,13 @@ async function generateAll() {
           mask.save();
           mask.filter = `blur(${Math.max(1, (1 - eased) * 9)}px)`;
           mask.fillStyle = '#fff';
-          for (let i = 0; i < 16; i++) {
+          for (let i = 0; i < 22; i++) {
             const delay = (i % 8) * 0.045;
             const q = clamp((p - delay) / Math.max(0.01, 0.72 - delay));
             if (q <= 0) continue;
             const x = w * (0.05 + 0.9 * noise(i * 47 + 3));
             const y = h * (0.12 + 0.76 * noise(i * 83 + 5));
-            const radius = Math.max(w, h) * (0.035 + q * 0.24);
+            const radius = Math.max(w, h) * (0.045 + q * 0.28);
             mask.beginPath();
             mask.arc(x, y, radius, 0, Math.PI * 2);
             mask.fill();
@@ -337,7 +342,7 @@ async function generateAll() {
           out.drawImage(workCanvas, 0, 0);
 
           if (p < 0.12) {
-            const flash = (1 - p / 0.12) * 0.3;
+            const flash = (1 - p / 0.12) * 0.5;
             const glow = out.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.58);
             glow.addColorStop(0, `rgba(255,255,255,${flash})`);
             glow.addColorStop(1, 'rgba(255,255,255,0)');
@@ -374,14 +379,19 @@ async function generateAll() {
           if (p < 0.9) {
             out.save();
             out.globalCompositeOperation = 'screen';
-            const beam = out.createLinearGradient(edgeX - 28, 0, edgeX + 28, 0);
+            const beam = out.createLinearGradient(edgeX - 45, 0, edgeX + 45, 0);
             beam.addColorStop(0, 'rgba(255,255,255,0)');
-            beam.addColorStop(0.42, rgba(color, 0.55 * (1 - p)));
-            beam.addColorStop(0.5, `rgba(255,255,255,${0.9 * (1 - p)})`);
-            beam.addColorStop(0.58, rgba(color, 0.55 * (1 - p)));
+            beam.addColorStop(0.36, rgba(color, 0.72 * (1 - p)));
+            beam.addColorStop(0.5, `rgba(255,255,255,${1.0 * (1 - p)})`);
+            beam.addColorStop(0.64, rgba(color, 0.72 * (1 - p)));
             beam.addColorStop(1, 'rgba(255,255,255,0)');
             out.fillStyle = beam;
-            out.fillRect(edgeX - 30, 0, 60, h);
+            out.fillRect(edgeX - 48, 0, 96, h);
+            out.globalAlpha = (1 - p) * 0.5;
+            out.fillStyle = '#22d3ee';
+            out.fillRect(edgeX - 9, 0, 3, h);
+            out.fillStyle = '#f472b6';
+            out.fillRect(edgeX + 7, 0, 3, h);
             out.restore();
           }
 
@@ -396,14 +406,14 @@ async function generateAll() {
         function drawBurstReveal(out, badge, w, h, p, color) {
           const eased = easeOutBack(p);
           const alpha = smoothstep(0.02, 0.34, p);
-          const scale = 0.72 + 0.28 * eased;
+          const scale = 0.58 + 0.42 * eased;
 
           out.save();
           out.translate(w / 2, h / 2);
           out.scale(scale, scale);
           out.translate(-w / 2, -h / 2);
           out.globalAlpha = alpha;
-          out.filter = `blur(${Math.max(0, (1 - p) * 4)}px)`;
+          out.filter = `blur(${Math.max(0, (1 - p) * 7)}px)`;
           out.drawImage(badge, 0, 0);
           out.restore();
 
@@ -412,15 +422,22 @@ async function generateAll() {
             out.translate(w / 2, h / 2);
             out.globalCompositeOperation = 'screen';
             out.strokeStyle = color;
-            out.lineWidth = 1.4;
-            out.globalAlpha = (1 - p) * 0.62;
-            for (let i = 0; i < 14; i++) {
-              const angle = i / 14 * Math.PI * 2 + p * 0.7;
+            out.lineWidth = 2;
+            out.globalAlpha = (1 - p) * 0.85;
+            for (let i = 0; i < 24; i++) {
+              const angle = i / 24 * Math.PI * 2 + p * 0.7;
               const inner = Math.min(w, h) * (0.12 + p * 0.18);
               const outer = Math.max(w, h) * (0.24 + p * 0.42) * (0.72 + noise(i * 91) * 0.28);
               out.beginPath();
               out.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
               out.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+              out.stroke();
+            }
+            for (let ring = 0; ring < 3; ring++) {
+              const radius = Math.min(w, h) * (0.1 + p * (0.55 + ring * 0.13));
+              out.globalAlpha = (1 - p) * (0.55 - ring * 0.1);
+              out.beginPath();
+              out.arc(0, 0, radius, 0, Math.PI * 2);
               out.stroke();
             }
             out.restore();
@@ -437,8 +454,8 @@ async function generateAll() {
         function drawWaveReveal(out, badge, w, h, p, frame, color) {
           const eased = easeOutCubic(p);
           const alpha = smoothstep(0.02, 0.3, p);
-          const amplitude = (1 - eased) * Math.max(8, w * 0.045);
-          const slices = 18;
+          const amplitude = (1 - eased) * Math.max(14, w * 0.08);
+          const slices = 24;
           const sliceH = h / slices;
 
           out.save();
@@ -458,10 +475,10 @@ async function generateAll() {
           if (p < 0.82) {
             out.save();
             out.strokeStyle = color;
-            out.lineWidth = 2;
-            out.globalAlpha = (1 - p) * 0.7;
-            for (let ring = 0; ring < 3; ring++) {
-              const radius = (p + ring * 0.16) * Math.min(w, h) * 0.72;
+            out.lineWidth = 2.6;
+            out.globalAlpha = (1 - p) * 0.85;
+            for (let ring = 0; ring < 5; ring++) {
+              const radius = (p + ring * 0.11) * Math.min(w, h) * 0.78;
               out.beginPath();
               out.ellipse(w / 2, h / 2, radius * 1.9, radius * 0.7, 0, 0, Math.PI * 2);
               out.stroke();
@@ -477,6 +494,81 @@ async function generateAll() {
           }
         }
 
+        function drawHoldFrame(out, work, badge, w, h, phase, introType, color) {
+          const pulse = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
+          const sheenX = -w * 0.35 + phase * w * 1.7;
+
+          work.clearRect(0, 0, w, h);
+          work.globalCompositeOperation = 'source-over';
+          work.globalAlpha = 1;
+          work.filter = 'none';
+          work.drawImage(badge, 0, 0);
+          work.globalCompositeOperation = 'source-atop';
+          const sheen = work.createLinearGradient(sheenX - 70, 0, sheenX + 70, h);
+          sheen.addColorStop(0, 'rgba(255,255,255,0)');
+          sheen.addColorStop(0.38, rgba(color, 0.08));
+          sheen.addColorStop(0.5, `rgba(255,255,255,${0.48 + pulse * 0.22})`);
+          sheen.addColorStop(0.62, rgba(color, 0.12));
+          sheen.addColorStop(1, 'rgba(255,255,255,0)');
+          work.fillStyle = sheen;
+          work.fillRect(sheenX - 90, -20, 180, h + 40);
+          work.globalCompositeOperation = 'source-over';
+
+          out.save();
+          out.filter = `drop-shadow(0 0 ${2 + pulse * 4}px ${rgba(color, 0.42)})`;
+          out.drawImage(workCanvas, 0, 0);
+          out.restore();
+
+          if (introType === 'glitch' && phase < 0.18) {
+            const micro = Math.sin(phase / 0.18 * Math.PI) * 3.5;
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.26;
+            out.filter = 'hue-rotate(120deg) saturate(4)';
+            out.drawImage(badge, micro, 0);
+            out.filter = 'hue-rotate(260deg) saturate(4)';
+            out.drawImage(badge, -micro, 0);
+            out.restore();
+          } else if (introType === 'wave') {
+            out.save();
+            out.strokeStyle = color;
+            out.lineWidth = 1.4;
+            out.globalAlpha = 0.12 + pulse * 0.12;
+            for (let ring = 0; ring < 2; ring++) {
+              const radius = Math.min(w, h) * (0.36 + ring * 0.18 + pulse * 0.035);
+              out.beginPath();
+              out.ellipse(w / 2, h / 2, radius * 1.9, radius * 0.62, 0, 0, Math.PI * 2);
+              out.stroke();
+            }
+            out.restore();
+          } else if (introType === 'scan') {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.28;
+            out.fillStyle = color;
+            out.fillRect(sheenX, h * 0.12, 2, h * 0.76);
+            out.restore();
+          }
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let i = 0; i < 7; i++) {
+            const motePhase = (phase + i / 7) % 1;
+            const x = w * (0.08 + 0.84 * noise(i * 59 + 17));
+            const y = h * (0.88 - motePhase * 0.7);
+            const radius = 0.7 + 1.4 * Math.sin(motePhase * Math.PI);
+            out.globalAlpha = Math.sin(motePhase * Math.PI) * 0.55;
+            out.fillStyle = i % 2 ? color : '#fff';
+            out.beginPath();
+            out.arc(x, y, radius, 0, Math.PI * 2);
+            out.fill();
+          }
+          out.restore();
+
+          drawSignatureDiamond(out, w - 11, h - 10, 8 + pulse * 2.5, 0.72 + pulse * 0.28);
+          drawSignatureDiamond(out, w * (0.2 + phase * 0.58), h * 0.23, 3.2 + pulse * 1.4, 0.32 + pulse * 0.42);
+        }
+
         function drawSignatureDiamond(out, x, y, size, alpha) {
           if (alpha <= 0) return;
           out.save();
@@ -484,7 +576,7 @@ async function generateAll() {
           out.globalAlpha = alpha;
           out.fillStyle = '#e5e7eb';
           out.shadowColor = 'rgba(255,255,255,0.65)';
-          out.shadowBlur = 4;
+          out.shadowBlur = 8;
           out.beginPath();
           out.moveTo(0, -size);
           out.quadraticCurveTo(0, 0, size, 0);
@@ -546,15 +638,18 @@ async function generateAll() {
           const c3 = c1 + 1;
           return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
         }
-      }, imgSrc, item.intro, item.effect, TARGET_HEIGHT, activeFrames);
+      }, imgSrc, item.intro, item.effect, TARGET_HEIGHT, activeFrames, HOLD_FRAMES);
 
       const { w, h } = frames[0];
       const encodedFrames = frames.map(frame => palettizeFrame(new Uint8Array(frame.data), w, h));
-      const finalFrame = encodedFrames[encodedFrames.length - 1];
+      const introFrames = encodedFrames.slice(0, activeFrames);
+      const holdFrames = encodedFrames.slice(activeFrames);
       const gif = GIFEncoder();
 
       for (let f = 0; f < TOTAL_FRAMES; f++) {
-        const frame = f < encodedFrames.length ? encodedFrames[f] : finalFrame;
+        const frame = f < activeFrames
+          ? introFrames[f]
+          : holdFrames[(f - activeFrames) % holdFrames.length];
         gif.writeFrame(frame.index, w, h, {
           palette: frame.palette,
           delay: DELAY,

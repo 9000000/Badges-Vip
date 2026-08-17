@@ -96,7 +96,7 @@ npm install
 npm run generate
 ```
 
-Mỗi GIF gồm 150 khung hình, 30 ms/khung (~33 FPS), lặp vô hạn trong 4,5 giây. Chỉ tạo lại một số badge khi phát triển:
+Mỗi GIF gồm 150 khung hình, 30 ms/khung (~33 FPS), lặp vô hạn trong 4,5 giây. Sau phần mở đầu, pha giữ tiếp tục có glow màu, quét sáng, hạt năng lượng và sparkle chuyển động. Chỉ tạo lại một số badge khi phát triển:
 ```bash
 node scripts/generate_badges.js --only=remux.gif,4k_ultra_hd.gif
 ```
