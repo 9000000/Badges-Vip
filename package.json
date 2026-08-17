@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "generate": "node scripts/generate_badges.js",
-    "import:reference": "node scripts/import_reference_badges.js"
+    "import:reference": "node scripts/import_reference_badges.js",
+    "preview:update": "node scripts/update_preview_gallery.js"
   },
   "repository": {
     "type": "git",

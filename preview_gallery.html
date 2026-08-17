@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Badges-Vip: Pure Transparent Big-Text Badges</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <title>Badges-Vip: 128 Animated GIF Badges</title>
   <style>
     :root {
       --bg-main: #0b0f19;
@@ -29,7 +26,7 @@
         radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.08) 0px, transparent 50%);
       color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
       min-height: 100vh;
       padding: 40px 24px;
       line-height: 1.5;
@@ -115,6 +112,33 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    .control-main {
+      display: grid;
+      gap: 12px;
+      flex: 1 1 760px;
+      min-width: 0;
+    }
+
+    .search-input {
+      width: min(520px, 100%);
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font: inherit;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.13);
+    }
+
+    .search-input::placeholder {
+      color: #64748b;
     }
 
     .tab-btn {
@@ -230,7 +254,7 @@
     }
 
     .badge-id {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: "Cascadia Code", Consolas, monospace;
       font-size: 11px;
       color: #64748b;
       background: rgba(0, 0, 0, 0.4);
@@ -319,8 +343,12 @@
     }
 
     .file-name {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: "Cascadia Code", Consolas, monospace;
       color: #94a3b8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 70%;
     }
 
     .file-status {
@@ -338,6 +366,32 @@
       background: #10b981;
       box-shadow: 0 0 6px #10b981;
     }
+
+    .empty-state {
+      padding: 64px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 28px 14px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .badge-card {
+        padding: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -351,34 +405,28 @@
     
     <div class="stats-bar">
       <div class="stat-item">
-        <span class="stat-val">31</span>
+        <span class="stat-val" id="total-badges">128</span>
         <span class="stat-lbl">Huy hiệu</span>
       </div>
       <div class="stat-item">
-        <span class="stat-val">0% Khung</span>
-        <span class="stat-lbl">100% Trong Suốt</span>
+        <span class="stat-val" id="total-groups">11</span>
+        <span class="stat-lbl">Nhóm</span>
       </div>
       <div class="stat-item">
-        <span class="stat-val">Big Text</span>
-        <span class="stat-lbl">Dễ nhìn khi thu nhỏ</span>
+        <span class="stat-val" id="visible-badges">128</span>
+        <span class="stat-lbl">Đang hiển thị</span>
       </div>
       <div class="stat-item">
-        <span class="stat-val">24 FPS</span>
-        <span class="stat-lbl">GIF Animation</span>
+        <span class="stat-val">4.5s</span>
+        <span class="stat-lbl">Vòng lặp GIF</span>
       </div>
     </div>
   </header>
 
   <div class="controls">
-    <div class="filter-tabs">
-      <button class="tab-btn active" onclick="filterGroup('all', this)">Tất cả (31)</button>
-      <button class="tab-btn" onclick="filterGroup('source', this)">Source (6)</button>
-      <button class="tab-btn" onclick="filterGroup('resolution', this)">Resolution (4)</button>
-      <button class="tab-btn" onclick="filterGroup('video-tech', this)">Video Tech (7)</button>
-      <button class="tab-btn" onclick="filterGroup('video-codec', this)">Video Codec (2)</button>
-      <button class="tab-btn" onclick="filterGroup('bit-depth', this)">Bit Depth (2)</button>
-      <button class="tab-btn" onclick="filterGroup('audio-tech', this)">Audio Tech (8)</button>
-      <button class="tab-btn" onclick="filterGroup('audio-channels', this)">Audio Channels (2)</button>
+    <div class="control-main">
+      <input class="search-input" id="search-input" type="search" placeholder="Tìm theo tên, ID hoặc tên file..." aria-label="Tìm badge">
+      <div class="filter-tabs" id="filter-tabs" aria-label="Lọc badge theo nhóm"></div>
     </div>
 
     <div class="bg-toggle">
@@ -387,6 +435,7 @@
       <button class="toggle-btn" onclick="setBg('checker')">Caro Trong Suốt</button>
       <button class="toggle-btn" onclick="setBg('poster')">Poster Phim</button>
       <button class="toggle-btn" onclick="setBg('light')">Nền Sáng</button>
+      <button class="toggle-btn" onclick="restartGifs()">Phát lại GIF</button>
     </div>
   </div>
 
@@ -396,67 +445,956 @@
 
   <script>
     const BADGES = [
-      // Source
-      { id: "remux", name: "REMUX", group: "source", groupName: "Source", file: "remux.gif" },
-      { id: "blu-ray-disc", name: "Blu-ray Disc", group: "source", groupName: "Source", file: "blu_ray_disc.gif" },
-      { id: "webdl", name: "WEB-DL", group: "source", groupName: "Source", file: "WEBDL_transparent_4x.gif" },
-      { id: "webrip", name: "WEBRip", group: "source", groupName: "Source", file: "WEBRip_transparent_4x.gif" },
-      { id: "hdtv", name: "HDTV", group: "source", groupName: "Source", file: "HDTV_transparent_4x.gif" },
-      { id: "dvd-rip", name: "DVD RIP", group: "source", groupName: "Source", file: "DVD_RIP_transparent_4x.gif" },
-
-      // Resolution
-      { id: "4k-ultra-hd", name: "4K Ultra HD", group: "resolution", groupName: "Resolution", file: "4k_ultra_hd.gif" },
-      { id: "1080p-full-hd", name: "1080p Full HD", group: "resolution", groupName: "Resolution", file: "1080p_full_hd.gif" },
-      { id: "720p-hd", name: "720p HD", group: "resolution", groupName: "Resolution", file: "720p_hd.gif" },
-      { id: "480p-sd", name: "480p SD", group: "resolution", groupName: "Resolution", file: "480p_sd.gif" },
-
-      // Video Tech
-      { id: "dolby-vision", name: "Dolby Vision", group: "video-tech", groupName: "Video Tech", file: "dolby_vision.gif" },
-      { id: "hdr10-plus", name: "HDR10+", group: "video-tech", groupName: "Video Tech", file: "hdr10_plus.gif" },
-      { id: "hdr10", name: "HDR10", group: "video-tech", groupName: "Video Tech", file: "hdr10.gif" },
-      { id: "hdr", name: "HDR", group: "video-tech", groupName: "Video Tech", file: "hdr.gif" },
-      { id: "sdr", name: "SDR", group: "video-tech", groupName: "Video Tech", file: "SDR_transparent_4x.gif" },
-      { id: "imax-enhanced", name: "IMAX Enhanced", group: "video-tech", groupName: "Video Tech", file: "imax_enhanced.gif" },
-      { id: "imax", name: "IMAX", group: "video-tech", groupName: "Video Tech", file: "imax.gif" },
-
-      // Video Codec
-      { id: "hevc", name: "HEVC", group: "video-codec", groupName: "Video Codec", file: "HEVC_transparent_4x.gif" },
-      { id: "avc", name: "AVC", group: "video-codec", groupName: "Video Codec", file: "AVC_transparent_4x.gif" },
-
-      // Bit Depth
-      { id: "10bit", name: "10Bit", group: "bit-depth", groupName: "Bit Depth", file: "10Bit_transparent_4x.gif" },
-      { id: "8bit", name: "8Bit", group: "bit-depth", groupName: "Bit Depth", file: "8Bit_transparent_4x.gif" },
-
-      // Audio Tech
-      { id: "dolby-atmos", name: "Dolby Atmos", group: "audio-tech", groupName: "Audio Tech", file: "dolby_atmos.gif" },
-      { id: "truehd", name: "TrueHD", group: "audio-tech", groupName: "Audio Tech", file: "truehd.gif" },
-      { id: "dolby-digital-plus", name: "Dolby Digital Plus", group: "audio-tech", groupName: "Audio Tech", file: "dolby_digital_plus.gif" },
-      { id: "dolby-digital", name: "Dolby Digital", group: "audio-tech", groupName: "Audio Tech", file: "dolby_digital.gif" },
-      { id: "dts-x", name: "DTS:X", group: "audio-tech", groupName: "Audio Tech", file: "dts_x.gif" },
-      { id: "dts-hd-master-audio", name: "DTS-HD Master Audio", group: "audio-tech", groupName: "Audio Tech", file: "dts_hd_master_audio.gif" },
-      { id: "dts-hd", name: "DTS-HD", group: "audio-tech", groupName: "Audio Tech", file: "dts_hd.gif" },
-      { id: "dts", name: "DTS", group: "audio-tech", groupName: "Audio Tech", file: "dts.gif" },
-
-      // Audio Channels
-      { id: "71-audio", name: "7.1 Audio", group: "audio-channels", groupName: "Audio Channels", file: "7_1_audio.gif" },
-      { id: "51-audio", name: "5.1 Audio", group: "audio-channels", groupName: "Audio Channels", file: "5_1_audio.gif" }
-    ];
+      {
+            "id": "remux",
+            "name": "REMUX",
+            "group": "source",
+            "groupName": "Source",
+            "file": "remux.gif"
+      },
+      {
+            "id": "blu-ray-disc",
+            "name": "Blu-ray Disc",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_disc.gif"
+      },
+      {
+            "id": "webdl",
+            "name": "WEB-DL",
+            "group": "source",
+            "groupName": "Source",
+            "file": "WEBDL_transparent_4x.gif"
+      },
+      {
+            "id": "webrip",
+            "name": "WEBRip",
+            "group": "source",
+            "groupName": "Source",
+            "file": "WEBRip_transparent_4x.gif"
+      },
+      {
+            "id": "hdtv",
+            "name": "HDTV",
+            "group": "source",
+            "groupName": "Source",
+            "file": "HDTV_transparent_4x.gif"
+      },
+      {
+            "id": "dvd-rip",
+            "name": "DVD RIP",
+            "group": "source",
+            "groupName": "Source",
+            "file": "DVD_RIP_transparent_4x.gif"
+      },
+      {
+            "id": "4k-ultra-hd",
+            "name": "4K Ultra HD",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "4k_ultra_hd.gif"
+      },
+      {
+            "id": "1080p-full-hd",
+            "name": "1080p Full HD",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "1080p_full_hd.gif"
+      },
+      {
+            "id": "720p-hd",
+            "name": "720p HD",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "720p_hd.gif"
+      },
+      {
+            "id": "480p-sd",
+            "name": "480p SD",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "480p_sd.gif"
+      },
+      {
+            "id": "dolby-vision",
+            "name": "Dolby Vision",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "dolby_vision.gif"
+      },
+      {
+            "id": "hdr10-plus",
+            "name": "HDR10+",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "hdr10_plus.gif"
+      },
+      {
+            "id": "hdr10",
+            "name": "HDR10",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "hdr10.gif"
+      },
+      {
+            "id": "hdr",
+            "name": "HDR",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "hdr.gif"
+      },
+      {
+            "id": "sdr",
+            "name": "SDR",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "SDR_transparent_4x.gif"
+      },
+      {
+            "id": "imax-enhanced",
+            "name": "IMAX Enhanced",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "imax_enhanced.gif"
+      },
+      {
+            "id": "imax",
+            "name": "IMAX",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "imax.gif"
+      },
+      {
+            "id": "hevc",
+            "name": "HEVC",
+            "group": "video-codec",
+            "groupName": "Video Codec",
+            "file": "HEVC_transparent_4x.gif"
+      },
+      {
+            "id": "avc",
+            "name": "AVC",
+            "group": "video-codec",
+            "groupName": "Video Codec",
+            "file": "AVC_transparent_4x.gif"
+      },
+      {
+            "id": "10bit",
+            "name": "10Bit",
+            "group": "bit-depth",
+            "groupName": "Bit Depth",
+            "file": "10Bit_transparent_4x.gif"
+      },
+      {
+            "id": "8bit",
+            "name": "8Bit",
+            "group": "bit-depth",
+            "groupName": "Bit Depth",
+            "file": "8Bit_transparent_4x.gif"
+      },
+      {
+            "id": "dolby-atmos",
+            "name": "Dolby Atmos",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dolby_atmos.gif"
+      },
+      {
+            "id": "truehd",
+            "name": "TrueHD",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "truehd.gif"
+      },
+      {
+            "id": "dolby-digital-plus",
+            "name": "Dolby Digital Plus",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dolby_digital_plus.gif"
+      },
+      {
+            "id": "dolby-digital",
+            "name": "Dolby Digital",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dolby_digital.gif"
+      },
+      {
+            "id": "dts-x",
+            "name": "DTS:X",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_x.gif"
+      },
+      {
+            "id": "dts-hd-master-audio",
+            "name": "DTS-HD Master Audio",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_hd_master_audio.gif"
+      },
+      {
+            "id": "dts-hd",
+            "name": "DTS-HD",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_hd.gif"
+      },
+      {
+            "id": "dts",
+            "name": "DTS",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts.gif"
+      },
+      {
+            "id": "71-audio",
+            "name": "7.1 Audio",
+            "group": "audio-channels",
+            "groupName": "Audio Channels",
+            "file": "7_1_audio.gif"
+      },
+      {
+            "id": "51-audio",
+            "name": "5.1 Audio",
+            "group": "audio-channels",
+            "groupName": "Audio Channels",
+            "file": "5_1_audio.gif"
+      },
+      {
+            "id": "seadex-release",
+            "name": "SEADEX",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "seadex.gif"
+      },
+      {
+            "id": "hybrid-release",
+            "name": "HYBRID",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "hybrid.gif"
+      },
+      {
+            "id": "criterion-collection",
+            "name": "CRITERION",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "criterion.gif"
+      },
+      {
+            "id": "proper-release",
+            "name": "PROPER",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "proper.gif"
+      },
+      {
+            "id": "repack-release",
+            "name": "REPACK",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "repack.gif"
+      },
+      {
+            "id": "remastered-release",
+            "name": "REMASTERED",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "remastered.gif"
+      },
+      {
+            "id": "open-matte-edition",
+            "name": "OPEN MATTE",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "open_matte.gif"
+      },
+      {
+            "id": "regraded-release",
+            "name": "REGRADED",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "regraded.gif"
+      },
+      {
+            "id": "edition-directors-cut",
+            "name": "DIR CUT",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "dir_cut.gif"
+      },
+      {
+            "id": "edition-extended",
+            "name": "EXTENDED",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "extended.gif"
+      },
+      {
+            "id": "uncut-edition",
+            "name": "UNCUT",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "uncut.gif"
+      },
+      {
+            "id": "uncensored-edition",
+            "name": "UNCENSORED",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "uncensored.gif"
+      },
+      {
+            "id": "black-and-white",
+            "name": "BLACK & WHITE",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "black_and_white.gif"
+      },
+      {
+            "id": "true-hue-edition",
+            "name": "TRUE-HUE",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "true_hue.gif"
+      },
+      {
+            "id": "edition-theatrical",
+            "name": "THTR",
+            "group": "special-tags",
+            "groupName": "Special Tags",
+            "file": "thtr.gif"
+      },
+      {
+            "id": "remux-1",
+            "name": "REMUX 1",
+            "group": "source",
+            "groupName": "Source",
+            "file": "remux_1.gif"
+      },
+      {
+            "id": "remux-2",
+            "name": "REMUX 2",
+            "group": "source",
+            "groupName": "Source",
+            "file": "remux_2.gif"
+      },
+      {
+            "id": "remux-3",
+            "name": "REMUX 3",
+            "group": "source",
+            "groupName": "Source",
+            "file": "remux_3.gif"
+      },
+      {
+            "id": "blu-ray-1",
+            "name": "BLU-RAY 1",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_1.gif"
+      },
+      {
+            "id": "blu-ray-2",
+            "name": "BLU-RAY 2",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_2.gif"
+      },
+      {
+            "id": "blu-ray-3",
+            "name": "BLU-RAY 3",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_3.gif"
+      },
+      {
+            "id": "blu-ray-4",
+            "name": "BLU-RAY 4",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_4.gif"
+      },
+      {
+            "id": "blu-ray-5",
+            "name": "BLU-RAY 5",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_5.gif"
+      },
+      {
+            "id": "blu-ray-6",
+            "name": "BLU-RAY 6",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_6.gif"
+      },
+      {
+            "id": "blu-ray-7",
+            "name": "BLU-RAY 7",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_7.gif"
+      },
+      {
+            "id": "blu-ray-8",
+            "name": "BLU-RAY 8",
+            "group": "source",
+            "groupName": "Source",
+            "file": "blu_ray_8.gif"
+      },
+      {
+            "id": "web-1",
+            "name": "WEB 1",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_1.gif"
+      },
+      {
+            "id": "web-2",
+            "name": "WEB 2",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_2.gif"
+      },
+      {
+            "id": "web-3",
+            "name": "WEB 3",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_3.gif"
+      },
+      {
+            "id": "web-4",
+            "name": "WEB 4",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_4.gif"
+      },
+      {
+            "id": "web-5",
+            "name": "WEB 5",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_5.gif"
+      },
+      {
+            "id": "web-6",
+            "name": "WEB 6",
+            "group": "source",
+            "groupName": "Source",
+            "file": "web_6.gif"
+      },
+      {
+            "id": "r-1440p",
+            "name": "1440p",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "1440p.gif"
+      },
+      {
+            "id": "r-576p",
+            "name": "576p",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "576p.gif"
+      },
+      {
+            "id": "r-360p",
+            "name": "360p",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "360p.gif"
+      },
+      {
+            "id": "r-240p",
+            "name": "240p",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "240p.gif"
+      },
+      {
+            "id": "r-144p",
+            "name": "144p",
+            "group": "resolution",
+            "groupName": "Resolution",
+            "file": "144p.gif"
+      },
+      {
+            "id": "src-hdrip",
+            "name": "HDRip",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "hdrip.gif"
+      },
+      {
+            "id": "gq-hc-hdrip",
+            "name": "HC HDRip",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "hc_hdrip.gif"
+      },
+      {
+            "id": "gq-scr",
+            "name": "SCR",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "scr.gif"
+      },
+      {
+            "id": "gq-tc",
+            "name": "TC",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "tc.gif"
+      },
+      {
+            "id": "gq-ts",
+            "name": "TS",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "ts.gif"
+      },
+      {
+            "id": "gq-cam",
+            "name": "CAM",
+            "group": "quality",
+            "groupName": "Quality",
+            "file": "cam.gif"
+      },
+      {
+            "id": "v-dv-hdr10p",
+            "name": "DV · HDR10+",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "dv_hdr10_plus.gif"
+      },
+      {
+            "id": "v-dv-hdr10",
+            "name": "DV · HDR10",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "dv_hdr10.gif"
+      },
+      {
+            "id": "v-dv-hdr",
+            "name": "DV · HDR",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "dv_hdr.gif"
+      },
+      {
+            "id": "v-hlg",
+            "name": "HLG",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "hlg.gif"
+      },
+      {
+            "id": "v-ai",
+            "name": "AI",
+            "group": "video-tech",
+            "groupName": "Video Tech",
+            "file": "ai.gif"
+      },
+      {
+            "id": "a-atmos-truehd",
+            "name": "ATMOS TRUEHD",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "atmos_truehd.gif"
+      },
+      {
+            "id": "a-dtsx-hdma",
+            "name": "DTS:X HD MA",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_x_hd_ma.gif"
+      },
+      {
+            "id": "a-atmos-ddplus",
+            "name": "ATMOS DIGITAL+",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "atmos_digital_plus.gif"
+      },
+      {
+            "id": "a-dtsx-hd",
+            "name": "DTS:X HD",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_x_hd.gif"
+      },
+      {
+            "id": "a-flac",
+            "name": "FLAC",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "flac.gif"
+      },
+      {
+            "id": "gv-dts-es",
+            "name": "DTS-ES",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "dts_es.gif"
+      },
+      {
+            "id": "a-opus",
+            "name": "OPUS",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "opus.gif"
+      },
+      {
+            "id": "a-aac",
+            "name": "AAC",
+            "group": "audio-tech",
+            "groupName": "Audio Tech",
+            "file": "aac.gif"
+      },
+      {
+            "id": "ch-61",
+            "name": "6.1",
+            "group": "audio-channels",
+            "groupName": "Audio Channels",
+            "file": "6_1.gif"
+      },
+      {
+            "id": "ch-20",
+            "name": "2.0",
+            "group": "audio-channels",
+            "groupName": "Audio Channels",
+            "file": "2_0.gif"
+      },
+      {
+            "id": "ge-av1",
+            "name": "AV1",
+            "group": "video-codec",
+            "groupName": "Video Codec",
+            "file": "av1.gif"
+      },
+      {
+            "id": "ge-xvid",
+            "name": "XviD",
+            "group": "video-codec",
+            "groupName": "Video Codec",
+            "file": "xvid.gif"
+      },
+      {
+            "id": "ge-divx",
+            "name": "DivX",
+            "group": "video-codec",
+            "groupName": "Video Codec",
+            "file": "divx.gif"
+      },
+      {
+            "id": "gs-peacock",
+            "name": "PEACOCK",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "peacock.gif"
+      },
+      {
+            "id": "s-nflx",
+            "name": "NETFLIX",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "netflix.gif"
+      },
+      {
+            "id": "s-amzn",
+            "name": "PRIME VIDEO",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "prime_video.gif"
+      },
+      {
+            "id": "s-atvp",
+            "name": "APPLE TV+",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "apple_tv_plus.gif"
+      },
+      {
+            "id": "s-dsnp",
+            "name": "DISNEY+",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "disney_plus.gif"
+      },
+      {
+            "id": "s-hmax",
+            "name": "HBO MAX",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "hbo_max.gif"
+      },
+      {
+            "id": "s-hulu",
+            "name": "HULU",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "hulu.gif"
+      },
+      {
+            "id": "s-pamp",
+            "name": "PARAMOUNT+",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "paramount_plus.gif"
+      },
+      {
+            "id": "s-croll",
+            "name": "CRUNCHYROLL",
+            "group": "streaming",
+            "groupName": "Streaming",
+            "file": "crunchyroll.gif"
+      },
+      {
+            "id": "l-en",
+            "name": "ENG",
+            "group": "language",
+            "groupName": "Language",
+            "file": "eng.gif"
+      },
+      {
+            "id": "l-es",
+            "name": "ESP",
+            "group": "language",
+            "groupName": "Language",
+            "file": "esp.gif"
+      },
+      {
+            "id": "f5",
+            "name": "LAT",
+            "group": "language",
+            "groupName": "Language",
+            "file": "lat.gif"
+      },
+      {
+            "id": "f6",
+            "name": "SPA",
+            "group": "language",
+            "groupName": "Language",
+            "file": "spa.gif"
+      },
+      {
+            "id": "l-fr",
+            "name": "FRE",
+            "group": "language",
+            "groupName": "Language",
+            "file": "fre.gif"
+      },
+      {
+            "id": "l-de",
+            "name": "GER",
+            "group": "language",
+            "groupName": "Language",
+            "file": "ger.gif"
+      },
+      {
+            "id": "l-it",
+            "name": "ITA",
+            "group": "language",
+            "groupName": "Language",
+            "file": "ita.gif"
+      },
+      {
+            "id": "l-pt-br",
+            "name": "BRA",
+            "group": "language",
+            "groupName": "Language",
+            "file": "bra.gif"
+      },
+      {
+            "id": "l-pt-pt",
+            "name": "POR",
+            "group": "language",
+            "groupName": "Language",
+            "file": "por.gif"
+      },
+      {
+            "id": "l-tr",
+            "name": "TUR",
+            "group": "language",
+            "groupName": "Language",
+            "file": "tur.gif"
+      },
+      {
+            "id": "l-pl",
+            "name": "POL",
+            "group": "language",
+            "groupName": "Language",
+            "file": "pol.gif"
+      },
+      {
+            "id": "l-uk",
+            "name": "UKR",
+            "group": "language",
+            "groupName": "Language",
+            "file": "ukr.gif"
+      },
+      {
+            "id": "l-id",
+            "name": "IND",
+            "group": "language",
+            "groupName": "Language",
+            "file": "ind.gif"
+      },
+      {
+            "id": "l-th",
+            "name": "THA",
+            "group": "language",
+            "groupName": "Language",
+            "file": "tha.gif"
+      },
+      {
+            "id": "l-vi",
+            "name": "VIE",
+            "group": "language",
+            "groupName": "Language",
+            "file": "vie.gif"
+      },
+      {
+            "id": "l-ja",
+            "name": "JPN",
+            "group": "language",
+            "groupName": "Language",
+            "file": "jpn.gif"
+      },
+      {
+            "id": "l-ko",
+            "name": "KOR",
+            "group": "language",
+            "groupName": "Language",
+            "file": "kor.gif"
+      },
+      {
+            "id": "l-zh",
+            "name": "CHI",
+            "group": "language",
+            "groupName": "Language",
+            "file": "chi.gif"
+      },
+      {
+            "id": "l-hi",
+            "name": "HIN",
+            "group": "language",
+            "groupName": "Language",
+            "file": "hin.gif"
+      },
+      {
+            "id": "l-ar",
+            "name": "ARA",
+            "group": "language",
+            "groupName": "Language",
+            "file": "ara.gif"
+      },
+      {
+            "id": "l-ru",
+            "name": "RUS",
+            "group": "language",
+            "groupName": "Language",
+            "file": "rus.gif"
+      },
+      {
+            "id": "l-el",
+            "name": "GRE",
+            "group": "language",
+            "groupName": "Language",
+            "file": "gre.gif"
+      },
+      {
+            "id": "f1",
+            "name": "CZE",
+            "group": "language",
+            "groupName": "Language",
+            "file": "cze.gif"
+      },
+      {
+            "id": "f2",
+            "name": "SVK",
+            "group": "language",
+            "groupName": "Language",
+            "file": "svk.gif"
+      },
+      {
+            "id": "f4",
+            "name": "SLO",
+            "group": "language",
+            "groupName": "Language",
+            "file": "slo.gif"
+      },
+      {
+            "id": "f3",
+            "name": "SWE",
+            "group": "language",
+            "groupName": "Language",
+            "file": "swe.gif"
+      },
+      {
+            "id": "l-mu",
+            "name": "MUL",
+            "group": "language",
+            "groupName": "Language",
+            "file": "mul.gif"
+      }
+];
 
     let currentFilter = 'all';
     let currentBg = 'dark';
+    let currentSearch = '';
+
+    function buildFilters() {
+      const tabs = document.getElementById('filter-tabs');
+      const groups = new Map();
+      BADGES.forEach(badge => {
+        if (!groups.has(badge.group)) {
+          groups.set(badge.group, { name: badge.groupName, count: 0 });
+        }
+        groups.get(badge.group).count += 1;
+      });
+
+      tabs.innerHTML = '';
+      const entries = [['all', { name: 'Tất cả', count: BADGES.length }], ...groups.entries()];
+      entries.forEach(([group, info]) => {
+        const button = document.createElement('button');
+        button.className = `tab-btn${group === currentFilter ? ' active' : ''}`;
+        button.type = 'button';
+        button.textContent = `${info.name} (${info.count})`;
+        button.addEventListener('click', () => filterGroup(group, button));
+        tabs.appendChild(button);
+      });
+
+      document.getElementById('total-badges').textContent = BADGES.length;
+      document.getElementById('total-groups').textContent = groups.size;
+    }
 
     function render() {
       const container = document.getElementById('gallery');
       container.innerHTML = '';
 
       const groups = {};
+      let visibleCount = 0;
       BADGES.forEach(b => {
         if (currentFilter !== 'all' && b.group !== currentFilter) return;
+        const haystack = `${b.name} ${b.id} ${b.file} ${b.groupName}`.toLocaleLowerCase('vi');
+        if (currentSearch && !haystack.includes(currentSearch)) return;
         if (!groups[b.group]) {
           groups[b.group] = { name: b.groupName, items: [] };
         }
         groups[b.group].items.push(b);
+        visibleCount += 1;
       });
+
+      document.getElementById('visible-badges').textContent = visibleCount;
+
+      if (visibleCount === 0) {
+        container.innerHTML = '<div class="empty-state">Không tìm thấy badge phù hợp.</div>';
+        return;
+      }
 
       for (const [gid, g] of Object.entries(groups)) {
         const section = document.createElement('div');
@@ -480,24 +1418,19 @@
               <span class="badge-id">${b.id}</span>
             </div>
             <div class="image-wrapper ${currentBg}-bg">
-              <img src="Badges/${b.file}" alt="${b.name}">
-            </div>
-            <div class="scale-preview">
-              <span class="scale-label">Khi thu nhỏ:</span>
-              <div class="scale-thumbs">
-                <div class="scale-thumb-box" title="24px height">
-                  <img src="Badges/${b.file}" height="24" alt="24px">
-                </div>
-                <div class="scale-thumb-box" title="32px height">
-                  <img src="Badges/${b.file}" height="32" alt="32px">
-                </div>
-              </div>
+              <img src="Badges/${b.file}" alt="${b.name}" loading="lazy" decoding="async" data-base-src="Badges/${b.file}">
             </div>
             <div class="badge-footer">
               <span class="file-name">${b.file}</span>
               <span class="file-status"><span class="status-dot"></span> Transparent GIF</span>
             </div>
           `;
+          const image = card.querySelector('img');
+          const status = card.querySelector('.file-status');
+          image.addEventListener('error', () => {
+            status.innerHTML = '<span class="status-dot" style="background:#ef4444;box-shadow:0 0 6px #ef4444"></span> Lỗi tải GIF';
+            status.style.color = '#ef4444';
+          });
           grid.appendChild(card);
         });
       }
@@ -510,6 +1443,13 @@
       render();
     }
 
+    function restartGifs() {
+      const stamp = Date.now();
+      document.querySelectorAll('.image-wrapper img').forEach(image => {
+        image.src = `${image.dataset.baseSrc}?preview=${stamp}`;
+      });
+    }
+
     function setBg(bg) {
       currentBg = bg;
       document.querySelectorAll('.image-wrapper').forEach(w => {
@@ -517,6 +1457,12 @@
       });
     }
 
+    document.getElementById('search-input').addEventListener('input', event => {
+      currentSearch = event.target.value.trim().toLocaleLowerCase('vi');
+      render();
+    });
+
+    buildFilters();
     render();
   </script>
 </body>
