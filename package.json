@@ -1,0 +1,25 @@
+{
+  "name": "badges-vip",
+  "version": "1.0.0",
+  "description": "Modern Animated Media Badges Suite",
+  "main": "index.js",
+  "scripts": {
+    "generate": "node scripts/generate_badges.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/9000000/Badges-Vip.git"
+  },
+  "keywords": ["badges", "animated", "gif", "infuse", "vidhub", "plex", "jellyfin", "stremio"],
+  "author": "9000000",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/9000000/Badges-Vip/issues"
+  },
+  "homepage": "https://github.com/9000000/Badges-Vip#readme",
+  "dependencies": {
+    "gifenc": "^1.0.3",
+    "puppeteer-core": "^25.7.0"
+  }
+}
