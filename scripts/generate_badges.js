@@ -7,8 +7,8 @@ const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const BADGES_DIR = path.resolve(__dirname, '..', 'Badges');
 const REFERENCE_MANIFEST_PATH = path.resolve(__dirname, 'reference_badges_manifest.json');
 
-// Darpit Animated Deluxe V1.0 uses 150 frames at 30 ms per frame.
-// The opening follows the reference cadence, followed by a stronger animated hold.
+// Luxury Motion v2 keeps the transparent badge silhouette but replaces the old
+// repeated intro cadence with a larger palette of cinematic, premium treatments.
 const TOTAL_FRAMES = 150;
 const DELAY = 30;
 const TARGET_HEIGHT = 150;
@@ -26,12 +26,35 @@ const REFERENCE_PROFILE = {
 };
 
 const INTRO_FRAMES = {
-  glitch: 22, // 0.63 s: RGB/liquid glitch, used by source badges
-  burst: 16,  // 0.45 s: fast light burst, used by HDR/DTS badges
-  scan: 33,   // 0.96 s: directional cinematic scan
-  wave: 33,   // 0.96 s: audio-wave distortion
-  ink: 76     // 2.25 s: ink/smoke materialisation, used by resolution badges
+  prism: 48,
+  silk: 64,
+  crystal: 54,
+  orbit: 42,
+  halo: 50,
+  particles: 62,
+  ribbon: 48,
+  shatter: 38,
+  aurora: 58,
+  chrome: 50,
+  glow: 56,
+  matrix: 54
 };
+
+const LUXURY_STYLES = Object.keys(INTRO_FRAMES);
+const LUXURY_COLORS = [
+  'champagne',
+  'rose',
+  'emerald',
+  'sapphire',
+  'amethyst',
+  'ice',
+  'copper',
+  'platinum',
+  'teal',
+  'ruby',
+  'indigo',
+  'lime'
+];
 
 const CORE_BADGES = [
   // Source
@@ -85,6 +108,23 @@ const REFERENCE_BADGES = fs.existsSync(REFERENCE_MANIFEST_PATH)
   : [];
 const BADGES = [...CORE_BADGES, ...REFERENCE_BADGES];
 
+function hashString(value) {
+  let hash = 2166136261;
+  for (const char of value) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function visualStyleFor(item) {
+  const seed = hashString(item.gif);
+  return {
+    intro: LUXURY_STYLES[seed % LUXURY_STYLES.length],
+    effect: LUXURY_COLORS[hashString(`${item.gif}:color`) % LUXURY_COLORS.length]
+  };
+}
+
 async function generateAll() {
   const onlyArg = process.argv.find(arg => arg.startsWith('--only='));
   const importedOnly = process.argv.includes('--imported');
@@ -102,7 +142,7 @@ async function generateAll() {
   }
 
   console.log(
-    `Generating ${queue.length} Darpit Animated Deluxe-style badges ` +
+    `Generating ${queue.length} Luxury Motion v2 animated badges ` +
     `(core: ${TOTAL_FRAMES} frames; expanded: ${REFERENCE_PROFILE.totalFrames} frames; 4.5 s loop)...`
   );
 
@@ -131,13 +171,14 @@ async function generateAll() {
             holdFrames: HOLD_FRAMES,
             introScale: 1
           };
+      const visualStyle = visualStyleFor(item);
       const activeFrames = Math.min(
         profile.totalFrames - profile.holdFrames,
-        Math.max(8, Math.round(INTRO_FRAMES[item.intro] * profile.introScale))
+        Math.max(8, Math.round(INTRO_FRAMES[visualStyle.intro] * profile.introScale))
       );
       console.log(
         `[${i + 1}/${queue.length}] ${item.png} -> ${item.gif} ` +
-        `(${item.intro}, ${(activeFrames * profile.delay / 1000).toFixed(2)} s intro)...`
+        `(${visualStyle.intro}/${visualStyle.effect}, ${(activeFrames * profile.delay / 1000).toFixed(2)} s intro)...`
       );
 
       const pngBase64 = fs.readFileSync(pngPath).toString('base64');
@@ -226,16 +267,30 @@ async function generateAll() {
 
           if (f > 0 && f < frameCount) {
             const p = frameCount === 1 ? 1 : f / (frameCount - 1);
-            if (intro === 'ink') {
-              drawInkReveal(ctx, workCtx, maskCtx, badgeCanvas, canvasW, canvasH, targetW, targetH, p, f, accent);
-            } else if (intro === 'scan') {
-              drawScanReveal(ctx, badgeCanvas, canvasW, canvasH, p, accent);
-            } else if (intro === 'burst') {
-              drawBurstReveal(ctx, badgeCanvas, canvasW, canvasH, p, accent);
-            } else if (intro === 'wave') {
-              drawWaveReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            if (intro === 'prism') {
+              drawPrismReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'silk') {
+              drawSilkReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'crystal') {
+              drawCrystalReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'orbit') {
+              drawOrbitReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'halo') {
+              drawHaloReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'particles') {
+              drawParticlesReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'ribbon') {
+              drawRibbonReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'shatter') {
+              drawShatterReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'aurora') {
+              drawAuroraReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'chrome') {
+              drawChromeReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+            } else if (intro === 'glow') {
+              drawGlowReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
             } else {
-              drawGlitchReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
+              drawMatrixReveal(ctx, badgeCanvas, canvasW, canvasH, p, f, accent);
             }
 
             drawSignatureDiamond(
@@ -267,6 +322,504 @@ async function generateAll() {
         }
 
         return rendered;
+
+        function drawPrismReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.02, 0.28, p);
+          const lift = (1 - eased) * h * 0.1;
+
+          out.save();
+          out.translate(w / 2, h / 2 + lift);
+          out.rotate((1 - eased) * -0.045 + Math.sin(frame * 0.12) * 0.004);
+          out.scale(0.9 + eased * 0.1, 0.9 + eased * 0.1);
+          out.translate(-w / 2, -h / 2);
+          out.globalAlpha = alpha;
+          out.filter = `blur(${(1 - eased) * 5}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          const beamX = -w * 0.25 + eased * w * 1.5;
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          const beam = out.createLinearGradient(beamX - 75, 0, beamX + 75, h);
+          beam.addColorStop(0, 'rgba(255,255,255,0)');
+          beam.addColorStop(0.38, rgba(color, 0.08 + (1 - p) * 0.3));
+          beam.addColorStop(0.5, `rgba(255,255,255,${0.24 + (1 - p) * 0.55})`);
+          beam.addColorStop(0.62, rgba(color, 0.08 + (1 - p) * 0.3));
+          beam.addColorStop(1, 'rgba(255,255,255,0)');
+          out.fillStyle = beam;
+          out.fillRect(beamX - 90, -20, 180, h + 40);
+          out.strokeStyle = rgba(color, 0.38 * (1 - p));
+          out.lineWidth = 1.5;
+          for (let i = -1; i <= 1; i++) {
+            out.beginPath();
+            out.moveTo(beamX + i * 18 - 55, 0);
+            out.lineTo(beamX + i * 18 + 35, h);
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.78) {
+            out.save();
+            out.globalAlpha = smoothstep(0.78, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawSilkReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeInOutCubic(p);
+          const alpha = smoothstep(0.03, 0.22, p);
+          const slices = 30;
+          const sliceH = h / slices;
+
+          out.save();
+          out.globalAlpha = alpha;
+          for (let i = 0; i < slices; i++) {
+            const y = i * sliceH;
+            const wave = Math.sin(i * 0.54 + frame * 0.22) * (1 - eased) * w * 0.09;
+            const drift = Math.sin(frame * 0.11 + i * 0.17) * (1 - eased) * 8;
+            out.save();
+            out.beginPath();
+            out.rect(0, y, w, sliceH + 1);
+            out.clip();
+            out.drawImage(badge, wave + drift, 0);
+            out.restore();
+          }
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          out.lineWidth = 2.2;
+          for (let ribbon = 0; ribbon < 4; ribbon++) {
+            const y = h * (0.2 + ribbon * 0.19);
+            out.globalAlpha = (1 - p) * (0.28 - ribbon * 0.035);
+            out.strokeStyle = ribbon % 2 ? '#ffffff' : color;
+            out.beginPath();
+            out.moveTo(-30, y);
+            out.bezierCurveTo(w * 0.26, y - 25, w * 0.42, y + 25, w * 0.66, y - 8);
+            out.bezierCurveTo(w * 0.82, y - 25, w * 0.94, y + 14, w + 30, y - 4);
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.84) {
+            out.save();
+            out.globalAlpha = smoothstep(0.84, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawCrystalReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutBack(p);
+          const alpha = smoothstep(0.04, 0.3, p);
+          const scale = 0.62 + eased * 0.38;
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.scale(scale, scale);
+          out.rotate(Math.sin(frame * 0.08) * (1 - p) * 0.04);
+          out.translate(-w / 2, -h / 2);
+          out.globalAlpha = alpha;
+          out.filter = `blur(${Math.max(0, (1 - p) * 4)}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.globalCompositeOperation = 'screen';
+          out.lineWidth = 1.4;
+          for (let i = 0; i < 12; i++) {
+            const angle = i / 12 * Math.PI * 2 + frame * 0.018;
+            const radius = Math.min(w, h) * (0.16 + (1 - p) * 0.42);
+            out.globalAlpha = (1 - p) * (0.24 + (i % 3) * 0.06);
+            out.strokeStyle = i % 3 === 0 ? '#ffffff' : color;
+            out.beginPath();
+            out.moveTo(Math.cos(angle) * radius * 0.3, Math.sin(angle) * radius * 0.3);
+            out.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.82) {
+            out.save();
+            out.globalAlpha = smoothstep(0.82, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawOrbitReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.04, 0.26, p);
+          const floatY = Math.sin(frame * 0.14) * (1 - p) * 7;
+
+          out.save();
+          out.translate(w / 2, h / 2 + floatY);
+          out.rotate((1 - eased) * 0.08);
+          out.scale(0.72 + eased * 0.28, 0.72 + eased * 0.28);
+          out.translate(-w / 2, -h / 2);
+          out.globalAlpha = alpha;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.globalCompositeOperation = 'screen';
+          for (let ring = 0; ring < 3; ring++) {
+            out.globalAlpha = (1 - p) * (0.45 - ring * 0.1);
+            out.strokeStyle = ring === 1 ? '#ffffff' : color;
+            out.lineWidth = 1.6;
+            out.beginPath();
+            out.ellipse(0, 0, Math.min(w, h) * (0.3 + ring * 0.16), Math.min(w, h) * (0.09 + ring * 0.045), ring * 0.18, 0, Math.PI * 2);
+            out.stroke();
+          }
+          for (let i = 0; i < 8; i++) {
+            const angle = frame * 0.08 + i / 8 * Math.PI * 2;
+            const x = Math.cos(angle) * Math.min(w, h) * (0.34 + (i % 2) * 0.11);
+            const y = Math.sin(angle) * Math.min(w, h) * (0.1 + (i % 2) * 0.04);
+            out.globalAlpha = (1 - p) * (0.45 + 0.2 * Math.sin(angle));
+            out.fillStyle = i % 3 ? color : '#ffffff';
+            out.beginPath();
+            out.arc(x, y, 1.4 + (i % 3), 0, Math.PI * 2);
+            out.fill();
+          }
+          out.restore();
+
+          if (p > 0.86) {
+            out.save();
+            out.globalAlpha = smoothstep(0.86, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawHaloReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeInOutCubic(p);
+          const alpha = smoothstep(0.02, 0.34, p);
+          const pulse = 0.5 + 0.5 * Math.sin(frame * 0.17);
+
+          out.save();
+          const halo = out.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6);
+          halo.addColorStop(0, rgba(color, (1 - p) * 0.34));
+          halo.addColorStop(0.48, rgba(color, (1 - p) * 0.1));
+          halo.addColorStop(1, 'rgba(0,0,0,0)');
+          out.globalCompositeOperation = 'screen';
+          out.fillStyle = halo;
+          out.fillRect(0, 0, w, h);
+          out.restore();
+
+          out.save();
+          out.globalAlpha = alpha;
+          out.filter = `drop-shadow(0 0 ${8 + pulse * 8}px ${rgba(color, 0.65)})`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.globalCompositeOperation = 'screen';
+          for (let ring = 0; ring < 4; ring++) {
+            const radius = Math.min(w, h) * (0.16 + eased * 0.48 + ring * 0.1);
+            out.globalAlpha = (1 - p) * (0.5 - ring * 0.09);
+            out.strokeStyle = ring % 2 ? '#ffffff' : color;
+            out.lineWidth = 1.5 + pulse;
+            out.beginPath();
+            out.arc(0, 0, radius, -Math.PI * 0.16, Math.PI * 1.16);
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.86) {
+            out.save();
+            out.globalAlpha = smoothstep(0.86, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawParticlesReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.02, 0.45, p);
+
+          out.save();
+          out.globalAlpha = alpha;
+          out.filter = `blur(${(1 - eased) * 2.2}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let i = 0; i < 48; i++) {
+            const originX = w * noise(i * 17 + 5);
+            const originY = h * noise(i * 23 + 8);
+            const targetX = w * (0.18 + 0.64 * noise(i * 29 + 3));
+            const targetY = h * (0.2 + 0.58 * noise(i * 31 + 9));
+            const q = clamp((p - (i % 9) * 0.035) / 0.82);
+            const x = originX + (targetX - originX) * q;
+            const y = originY + (targetY - originY) * q - q * (1 - q) * h * 0.16;
+            out.globalAlpha = (1 - q) * 0.68;
+            out.fillStyle = i % 4 ? color : '#ffffff';
+            out.beginPath();
+            out.arc(x, y, 0.7 + (i % 4) * 0.55, 0, Math.PI * 2);
+            out.fill();
+          }
+          out.restore();
+
+          if (p > 0.88) {
+            out.save();
+            out.globalAlpha = smoothstep(0.88, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawRibbonReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const edge = -w * 0.35 + eased * w * 1.7;
+
+          out.save();
+          out.beginPath();
+          out.moveTo(-30, -20);
+          out.lineTo(edge + 65, -20);
+          out.bezierCurveTo(edge - 30, h * 0.32, edge + 95, h * 0.68, edge - 20, h + 20);
+          out.lineTo(-30, h + 20);
+          out.closePath();
+          out.clip();
+          out.globalAlpha = smoothstep(0.02, 0.25, p);
+          out.filter = `blur(${(1 - eased) * 3}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let i = 0; i < 4; i++) {
+            out.globalAlpha = (1 - p) * (0.48 - i * 0.08);
+            out.strokeStyle = i % 2 ? '#ffffff' : color;
+            out.lineWidth = 2 + i * 0.5;
+            out.beginPath();
+            out.moveTo(edge - 90 + i * 22, -20);
+            out.bezierCurveTo(edge + 25 + i * 22, h * 0.25, edge - 42 + i * 22, h * 0.72, edge + 92 + i * 22, h + 20);
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.85) {
+            out.save();
+            out.globalAlpha = smoothstep(0.85, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawShatterReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.08, 0.5, p);
+          const cx = w / 2;
+          const cy = h / 2;
+          const pieces = 14;
+
+          out.save();
+          out.globalAlpha = alpha;
+          for (let i = 0; i < pieces; i++) {
+            const a0 = i / pieces * Math.PI * 2;
+            const a1 = (i + 1) / pieces * Math.PI * 2;
+            const r = Math.max(w, h) * 0.75;
+            const force = (1 - eased) * (18 + noise(i * 19) * 38);
+            const dx = Math.cos((a0 + a1) / 2) * force;
+            const dy = Math.sin((a0 + a1) / 2) * force;
+            out.save();
+            out.beginPath();
+            out.moveTo(cx, cy);
+            out.lineTo(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r);
+            out.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r);
+            out.closePath();
+            out.clip();
+            out.drawImage(badge, dx, dy);
+            out.restore();
+          }
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let i = 0; i < 12; i++) {
+            const angle = i / 12 * Math.PI * 2;
+            const length = (1 - p) * Math.max(w, h) * (0.22 + noise(i * 23) * 0.45);
+            out.globalAlpha = (1 - p) * 0.4;
+            out.strokeStyle = i % 3 ? color : '#ffffff';
+            out.lineWidth = 1 + (i % 2);
+            out.beginPath();
+            out.moveTo(cx + Math.cos(angle) * 15, cy + Math.sin(angle) * 15);
+            out.lineTo(cx + Math.cos(angle) * (15 + length), cy + Math.sin(angle) * (15 + length));
+            out.stroke();
+          }
+          out.restore();
+
+          if (p > 0.88) {
+            out.save();
+            out.globalAlpha = smoothstep(0.88, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawAuroraReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeInOutCubic(p);
+          const alpha = smoothstep(0.03, 0.34, p);
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let band = 0; band < 5; band++) {
+            const baseY = h * (0.18 + band * 0.16);
+            const gradient = out.createLinearGradient(0, baseY - 28, w, baseY + 28);
+            gradient.addColorStop(0, 'rgba(255,255,255,0)');
+            gradient.addColorStop(0.5, rgba(color, (1 - p) * 0.14));
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            out.strokeStyle = gradient;
+            out.lineWidth = 14 + band * 3;
+            out.globalAlpha = (1 - p) * 0.75;
+            out.beginPath();
+            out.moveTo(-30, baseY);
+            for (let x = 0; x <= w + 30; x += 22) {
+              const y = baseY + Math.sin(x * 0.025 + frame * 0.12 + band) * (10 + (1 - eased) * 22);
+              out.lineTo(x, y);
+            }
+            out.stroke();
+          }
+          out.restore();
+
+          out.save();
+          out.globalAlpha = alpha;
+          out.filter = `drop-shadow(0 0 ${4 + (1 - p) * 10}px ${rgba(color, 0.55)})`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          if (p > 0.86) {
+            out.save();
+            out.globalAlpha = smoothstep(0.86, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawChromeReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutBack(p);
+          const alpha = smoothstep(0.02, 0.3, p);
+          const sheenX = -w * 0.4 + eased * w * 1.8;
+
+          out.save();
+          out.translate(w / 2, h / 2);
+          out.scale(0.72 + eased * 0.28, 0.72 + eased * 0.28);
+          out.rotate(Math.sin(frame * 0.07) * (1 - p) * 0.03);
+          out.translate(-w / 2, -h / 2);
+          out.globalAlpha = alpha;
+          out.filter = `drop-shadow(0 0 ${5 + (1 - p) * 7}px ${rgba(color, 0.65)})`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          const sheen = out.createLinearGradient(sheenX - 90, 0, sheenX + 90, h);
+          sheen.addColorStop(0, 'rgba(255,255,255,0)');
+          sheen.addColorStop(0.42, rgba(color, 0.14));
+          sheen.addColorStop(0.5, `rgba(255,255,255,${0.65 * (1 - p)})`);
+          sheen.addColorStop(0.58, rgba(color, 0.14));
+          sheen.addColorStop(1, 'rgba(255,255,255,0)');
+          out.fillStyle = sheen;
+          out.fillRect(sheenX - 100, -20, 200, h + 40);
+          out.restore();
+
+          if (p > 0.82) {
+            out.save();
+            out.globalAlpha = smoothstep(0.82, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawGlowReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeInOutCubic(p);
+          const alpha = smoothstep(0.02, 0.34, p);
+          const pulse = 0.5 + 0.5 * Math.sin(frame * 0.2);
+          const radius = Math.max(w, h) * (0.32 + pulse * 0.1);
+
+          out.save();
+          const gradient = out.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, radius * 1.7);
+          gradient.addColorStop(0, rgba(color, (1 - p) * 0.32));
+          gradient.addColorStop(0.36, rgba(color, (1 - p) * 0.12));
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          out.globalCompositeOperation = 'screen';
+          out.fillStyle = gradient;
+          out.fillRect(0, 0, w, h);
+          out.restore();
+
+          out.save();
+          out.globalAlpha = alpha;
+          out.filter = `drop-shadow(0 0 ${7 + pulse * 8}px ${rgba(color, 0.72)}) blur(${(1 - eased) * 2}px)`;
+          out.drawImage(badge, 0, 0);
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          out.globalAlpha = (1 - p) * 0.4;
+          out.strokeStyle = '#ffffff';
+          out.lineWidth = 1.2;
+          out.beginPath();
+          out.arc(w / 2, h / 2, Math.min(w, h) * (0.25 + eased * 0.46), frame * 0.03, frame * 0.03 + Math.PI * 1.7);
+          out.stroke();
+          out.restore();
+
+          if (p > 0.86) {
+            out.save();
+            out.globalAlpha = smoothstep(0.86, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
+
+        function drawMatrixReveal(out, badge, w, h, p, frame, color) {
+          const eased = easeOutCubic(p);
+          const alpha = smoothstep(0.04, 0.4, p);
+          const columns = Math.max(18, Math.round(w / 20));
+
+          out.save();
+          out.globalAlpha = alpha;
+          const sliceW = w / columns;
+          for (let i = 0; i < columns; i++) {
+            const x = i * sliceW;
+            const drift = Math.sin(frame * 0.15 + i * 1.6) * (1 - eased) * 11;
+            out.save();
+            out.beginPath();
+            out.rect(x, 0, sliceW + 1, h);
+            out.clip();
+            out.drawImage(badge, drift, 0);
+            out.restore();
+          }
+          out.restore();
+
+          out.save();
+          out.globalCompositeOperation = 'screen';
+          for (let i = 0; i < columns; i++) {
+            const x = i * sliceW + sliceW * 0.5;
+            const travel = ((frame * (1.5 + noise(i * 13) * 2.5) + i * 23) % (h + 40)) - 20;
+            out.globalAlpha = (1 - p) * (0.18 + noise(i * 31) * 0.3);
+            out.fillStyle = i % 5 === 0 ? '#ffffff' : color;
+            out.fillRect(x, travel, Math.max(1, sliceW * 0.08), 4 + (i % 4) * 3);
+            if (i % 3 === 0) out.fillRect(x, travel + 12, Math.max(1, sliceW * 0.05), 1);
+          }
+          for (let y = 0; y < h; y += 5) {
+            out.globalAlpha = (1 - p) * 0.08;
+            out.fillRect(0, y, w, 1);
+          }
+          out.restore();
+
+          if (p > 0.88) {
+            out.save();
+            out.globalAlpha = smoothstep(0.88, 1, p);
+            out.drawImage(badge, 0, 0);
+            out.restore();
+          }
+        }
 
         function drawGlitchReveal(out, badge, w, h, p, frame, color) {
           const eased = easeOutCubic(p);
@@ -580,6 +1133,80 @@ async function generateAll() {
             out.fillStyle = color;
             out.fillRect(sheenX, h * 0.12, 2, h * 0.76);
             out.restore();
+          } else if (introType === 'prism' || introType === 'chrome') {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.22 + pulse * 0.12;
+            out.strokeStyle = introType === 'chrome' ? '#ffffff' : color;
+            out.lineWidth = introType === 'chrome' ? 1.8 : 1.2;
+            for (let line = -1; line < 3; line++) {
+              out.beginPath();
+              out.moveTo(sheenX + line * 24 - 70, 0);
+              out.lineTo(sheenX + line * 24 + 35, h);
+              out.stroke();
+            }
+            out.restore();
+          } else if (introType === 'silk' || introType === 'ribbon') {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.12 + pulse * 0.1;
+            out.strokeStyle = introType === 'silk' ? color : '#ffffff';
+            out.lineWidth = 1.4;
+            for (let ribbon = 0; ribbon < 3; ribbon++) {
+              const y = h * (0.27 + ribbon * 0.22);
+              out.beginPath();
+              out.moveTo(-20, y);
+              out.bezierCurveTo(w * 0.28, y - 18, w * 0.46, y + 18, w * 0.68, y - 6);
+              out.bezierCurveTo(w * 0.84, y - 18, w + 20, y + 10, w + 30, y);
+              out.stroke();
+            }
+            out.restore();
+          } else if (introType === 'crystal' || introType === 'shatter') {
+            out.save();
+            out.translate(w / 2, h / 2);
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.13 + pulse * 0.1;
+            out.strokeStyle = color;
+            out.lineWidth = 1;
+            for (let facet = 0; facet < 8; facet++) {
+              const angle = facet / 8 * Math.PI * 2 + phase * 0.5;
+              const radius = Math.min(w, h) * (0.28 + pulse * 0.18);
+              out.beginPath();
+              out.moveTo(0, 0);
+              out.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+              out.stroke();
+            }
+            out.restore();
+          } else if (introType === 'orbit' || introType === 'halo') {
+            out.save();
+            out.translate(w / 2, h / 2);
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.16 + pulse * 0.1;
+            out.strokeStyle = introType === 'halo' ? '#ffffff' : color;
+            out.lineWidth = 1.2;
+            for (let ring = 0; ring < 2; ring++) {
+              out.beginPath();
+              out.ellipse(0, 0, Math.min(w, h) * (0.38 + ring * 0.16), Math.min(w, h) * (0.12 + ring * 0.04), ring * 0.2 + phase * 0.2, 0, Math.PI * 2);
+              out.stroke();
+            }
+            out.restore();
+          } else if (introType === 'particles' || introType === 'glow' || introType === 'aurora') {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.1 + pulse * 0.12;
+            out.strokeStyle = color;
+            out.lineWidth = 1.2;
+            out.beginPath();
+            out.arc(w / 2, h / 2, Math.min(w, h) * (0.3 + pulse * 0.12), phase * Math.PI * 2, phase * Math.PI * 2 + Math.PI * 1.35);
+            out.stroke();
+            out.restore();
+          } else if (introType === 'matrix') {
+            out.save();
+            out.globalCompositeOperation = 'screen';
+            out.globalAlpha = 0.1 + pulse * 0.05;
+            out.fillStyle = color;
+            for (let y = 0; y < h; y += 7) out.fillRect(0, y, w, 1);
+            out.restore();
           }
 
           out.save();
@@ -628,7 +1255,19 @@ async function generateAll() {
             gold: '#facc15',
             green: '#4ade80',
             orange: '#fb923c',
-            rainbow: '#f472b6'
+            rainbow: '#f472b6',
+            champagne: '#f7d794',
+            rose: '#fb7185',
+            emerald: '#34d399',
+            sapphire: '#60a5fa',
+            amethyst: '#c084fc',
+            ice: '#bae6fd',
+            copper: '#f59e0b',
+            platinum: '#e2e8f0',
+            teal: '#2dd4bf',
+            ruby: '#f43f5e',
+            indigo: '#818cf8',
+            lime: '#a3e635'
           };
           return colors[name] || colors.silver;
         }
@@ -670,7 +1309,7 @@ async function generateAll() {
           const c3 = c1 + 1;
           return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
         }
-      }, imgSrc, item.intro, item.effect, profile.targetHeight, activeFrames, profile.holdFrames);
+      }, imgSrc, visualStyle.intro, visualStyle.effect, profile.targetHeight, activeFrames, profile.holdFrames);
 
       const { w, h } = frames[0];
       const encodedFrames = frames.map(frame => palettizeFrame(new Uint8Array(frame.data), w, h));
@@ -701,7 +1340,7 @@ async function generateAll() {
     await browser.close();
   }
 
-  console.log(`\nAll ${queue.length} Darpit Animated Deluxe-style badges generated.`);
+  console.log(`\nAll ${queue.length} Luxury Motion v2 animated badges generated.`);
 }
 
 function palettizeFrame(data, w, h) {

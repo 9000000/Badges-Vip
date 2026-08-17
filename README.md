@@ -1,6 +1,6 @@
 # 💎 Badges-Vip: Modern Animated Media Badges
 
-> **Bộ sưu tập 128 huy hiệu (badges) động định dạng `.gif` phong cách Darpit Animated Deluxe: glitch RGB, khói–mực, scan điện ảnh, light burst và sóng không gian dành cho VidHub, Infuse, Jellyfin, Plex, Kodi, Stremio.**
+> **Bộ sưu tập 128 huy hiệu (badges) động định dạng `.gif` theo phong cách Luxury Motion v2: ánh kim champagne, prism, silk, crystal, orbit, halo, particles, ribbon, shatter, aurora, chrome, glow và matrix dành cho VidHub, Infuse, Jellyfin, Plex, Kodi, Stremio.**
 
 [![Badges](https://img.shields.io/badge/Total%20Badges-128-blue.svg?style=for-the-badge)](#)
 [![Format](https://img.shields.io/badge/Format-Animated%20GIF-purple.svg?style=for-the-badge)](#)
@@ -115,7 +115,7 @@ npm install
 npm run generate
 ```
 
-Bộ cốt lõi dùng 150 khung hình ở 30 ms/khung; bộ mở rộng dùng 90 khung hình ở 50 ms/khung để tối ưu dung lượng. Cả hai đều lặp vô hạn trong 4,5 giây với glow màu, quét sáng, hạt năng lượng và sparkle chuyển động. Chỉ tạo lại một số badge khi phát triển:
+Bộ cốt lõi dùng 150 khung hình ở 30 ms/khung; bộ mở rộng dùng 90 khung hình ở 50 ms/khung để tối ưu dung lượng. Cả hai đều lặp vô hạn trong 4,5 giây. Mỗi badge được gán một style chuyển động và bảng màu riêng theo ID, hạn chế tối đa cảm giác lặp hiệu ứng giữa các nhãn. Chỉ tạo lại một số badge khi phát triển:
 ```bash
 node scripts/generate_badges.js --only=remux.gif,4k_ultra_hd.gif
 ```
