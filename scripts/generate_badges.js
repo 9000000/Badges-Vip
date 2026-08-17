@@ -5,6 +5,7 @@ const { GIFEncoder, applyPalette, quantize } = require('gifenc');
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const BADGES_DIR = path.resolve(__dirname, '..', 'Badges');
+const REFERENCE_MANIFEST_PATH = path.resolve(__dirname, 'reference_badges_manifest.json');
 
 // Darpit Animated Deluxe V1.0 uses 150 frames at 30 ms per frame.
 // The opening follows the reference cadence, followed by a stronger animated hold.
@@ -12,6 +13,17 @@ const TOTAL_FRAMES = 150;
 const DELAY = 30;
 const TARGET_HEIGHT = 150;
 const HOLD_FRAMES = 30;
+
+// The expanded catalogue contains many more labels. It keeps the same 4.5-second
+// loop and visual language while using fewer unique frames to keep the repository
+// and client downloads at a practical size.
+const REFERENCE_PROFILE = {
+  totalFrames: 90,
+  delay: 50,
+  targetHeight: 112,
+  holdFrames: 24,
+  introScale: 0.78
+};
 
 const INTRO_FRAMES = {
   glitch: 22, // 0.63 s: RGB/liquid glitch, used by source badges
@@ -21,7 +33,7 @@ const INTRO_FRAMES = {
   ink: 76     // 2.25 s: ink/smoke materialisation, used by resolution badges
 };
 
-const BADGES = [
+const CORE_BADGES = [
   // Source
   { png: 'remux.png', gif: 'remux.gif', effect: 'silver', intro: 'glitch' },
   { png: 'blu_ray_disc.png', gif: 'blu_ray_disc.gif', effect: 'blue', intro: 'glitch' },
@@ -68,14 +80,22 @@ const BADGES = [
   { png: '5_1_audio.png', gif: '5_1_audio.gif', effect: 'cyan', intro: 'wave' }
 ];
 
+const REFERENCE_BADGES = fs.existsSync(REFERENCE_MANIFEST_PATH)
+  ? JSON.parse(fs.readFileSync(REFERENCE_MANIFEST_PATH, 'utf8')).badges
+  : [];
+const BADGES = [...CORE_BADGES, ...REFERENCE_BADGES];
+
 async function generateAll() {
   const onlyArg = process.argv.find(arg => arg.startsWith('--only='));
+  const importedOnly = process.argv.includes('--imported');
   const only = onlyArg
     ? new Set(onlyArg.slice('--only='.length).split(',').map(name => name.trim()).filter(Boolean))
     : null;
-  const queue = only
-    ? BADGES.filter(item => only.has(item.gif) || only.has(item.png))
-    : BADGES;
+  const queue = importedOnly
+    ? REFERENCE_BADGES
+    : only
+      ? BADGES.filter(item => only.has(item.gif) || only.has(item.png))
+      : BADGES;
 
   if (queue.length === 0) {
     throw new Error('No badges matched --only');
@@ -83,7 +103,7 @@ async function generateAll() {
 
   console.log(
     `Generating ${queue.length} Darpit Animated Deluxe-style badges ` +
-    `(${TOTAL_FRAMES} frames, ${DELAY} ms, ${(TOTAL_FRAMES * DELAY / 1000).toFixed(1)} s loop)...`
+    `(core: ${TOTAL_FRAMES} frames; expanded: ${REFERENCE_PROFILE.totalFrames} frames; 4.5 s loop)...`
   );
 
   const browser = await puppeteer.launch({
@@ -102,10 +122,22 @@ async function generateAll() {
         throw new Error(`Missing PNG source: ${pngPath}`);
       }
 
-      const activeFrames = INTRO_FRAMES[item.intro];
+      const profile = item.collection === 'reference'
+        ? REFERENCE_PROFILE
+        : {
+            totalFrames: TOTAL_FRAMES,
+            delay: DELAY,
+            targetHeight: TARGET_HEIGHT,
+            holdFrames: HOLD_FRAMES,
+            introScale: 1
+          };
+      const activeFrames = Math.min(
+        profile.totalFrames - profile.holdFrames,
+        Math.max(8, Math.round(INTRO_FRAMES[item.intro] * profile.introScale))
+      );
       console.log(
         `[${i + 1}/${queue.length}] ${item.png} -> ${item.gif} ` +
-        `(${item.intro}, ${(activeFrames * DELAY / 1000).toFixed(2)} s intro)...`
+        `(${item.intro}, ${(activeFrames * profile.delay / 1000).toFixed(2)} s intro)...`
       );
 
       const pngBase64 = fs.readFileSync(pngPath).toString('base64');
@@ -638,7 +670,7 @@ async function generateAll() {
           const c3 = c1 + 1;
           return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
         }
-      }, imgSrc, item.intro, item.effect, TARGET_HEIGHT, activeFrames, HOLD_FRAMES);
+      }, imgSrc, item.intro, item.effect, profile.targetHeight, activeFrames, profile.holdFrames);
 
       const { w, h } = frames[0];
       const encodedFrames = frames.map(frame => palettizeFrame(new Uint8Array(frame.data), w, h));
@@ -646,13 +678,13 @@ async function generateAll() {
       const holdFrames = encodedFrames.slice(activeFrames);
       const gif = GIFEncoder();
 
-      for (let f = 0; f < TOTAL_FRAMES; f++) {
+      for (let f = 0; f < profile.totalFrames; f++) {
         const frame = f < activeFrames
           ? introFrames[f]
           : holdFrames[(f - activeFrames) % holdFrames.length];
         gif.writeFrame(frame.index, w, h, {
           palette: frame.palette,
-          delay: DELAY,
+          delay: profile.delay,
           repeat: 0,
           transparent: true,
           transparentIndex: 0,

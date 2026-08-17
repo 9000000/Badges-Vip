@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Badge Link Preview</title>
+  <style>
+    :root {
+      --bg: #070a12;
+      --surface: rgba(16, 22, 36, 0.78);
+      --surface-strong: #121a2a;
+      --surface-soft: rgba(255, 255, 255, 0.045);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-hot: rgba(86, 214, 255, 0.48);
+      --text: #f6f8ff;
+      --muted: #96a2b8;
+      --cyan: #56d6ff;
+      --blue: #6f8cff;
+      --violet: #b67cff;
+      --green: #55e6a5;
+      --red: #ff7288;
+      --gold: #ffd166;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(86, 214, 255, 0.16), transparent 31rem),
+        radial-gradient(circle at 92% 4%, rgba(182, 124, 255, 0.14), transparent 28rem),
+        linear-gradient(180deg, #080c16 0%, var(--bg) 62%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 3px solid rgba(86, 214, 255, 0.35);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 46px 0 72px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      width: fit-content;
+      margin-bottom: 13px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 16px var(--cyan);
+      content: "";
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(36px, 5.5vw, 72px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(15px, 1.8vw, 18px);
+    }
+
+    .hero-mark {
+      display: grid;
+      width: 118px;
+      height: 118px;
+      place-items: center;
+      border: 1px solid rgba(86, 214, 255, 0.28);
+      border-radius: 32px;
+      background:
+        linear-gradient(145deg, rgba(86, 214, 255, 0.17), rgba(182, 124, 255, 0.08)),
+        rgba(11, 16, 28, 0.76);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), var(--shadow);
+      color: white;
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -0.08em;
+      transform: rotate(3deg);
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .loader-panel {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .loader-label {
+      display: block;
+      margin-bottom: 9px;
+      color: #dfe8f9;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .url-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .url-input,
+    .search-input,
+    .select-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      background: rgba(3, 7, 15, 0.68);
+      transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+
+    .url-input {
+      min-height: 52px;
+      padding: 0 16px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+
+    .url-input:hover,
+    .url-input:focus,
+    .search-input:hover,
+    .search-input:focus,
+    .select-input:hover,
+    .select-input:focus {
+      border-color: var(--border-hot);
+      background: rgba(5, 11, 23, 0.92);
+      box-shadow: 0 0 0 4px rgba(86, 214, 255, 0.06);
+    }
+
+    .primary-button,
+    .ghost-button,
+    .group-button,
+    .icon-button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 150ms ease, opacity 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .primary-button {
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 14px;
+      color: #04121b;
+      background: linear-gradient(135deg, #91eaff, var(--cyan) 58%, #77a7ff);
+      box-shadow: 0 12px 30px rgba(86, 214, 255, 0.22);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .primary-button:hover,
+    .ghost-button:hover,
+    .group-button:hover,
+    .icon-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+      transform: none;
+    }
+
+    .loader-help {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      margin-top: 11px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .status.visible {
+      display: flex;
+    }
+
+    .status.loading {
+      color: #c6efff;
+      border-color: rgba(86, 214, 255, 0.24);
+      background: rgba(86, 214, 255, 0.07);
+    }
+
+    .status.success {
+      color: #b9f8d9;
+      border-color: rgba(85, 230, 165, 0.24);
+      background: rgba(85, 230, 165, 0.07);
+    }
+
+    .status.error {
+      color: #ffc2cb;
+      border-color: rgba(255, 114, 136, 0.28);
+      background: rgba(255, 114, 136, 0.08);
+    }
+
+    .status-dot {
+      flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .toolbar {
+      display: none;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar.visible {
+      display: block;
+    }
+
+    .toolbar-top {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(170px, 220px) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input,
+    .select-input {
+      min-height: 44px;
+      padding: 0 13px;
+      font-size: 13px;
+    }
+
+    .select-input {
+      cursor: pointer;
+    }
+
+    .ghost-button {
+      min-height: 44px;
+      padding: 0 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: #dbe5f8;
+      background: var(--surface-soft);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .group-tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      overflow-x: auto;
+      border-top: 1px solid var(--border);
+      scrollbar-width: thin;
+    }
+
+    .group-button {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .group-button.active {
+      color: #04131d;
+      border-color: transparent;
+      background: var(--cyan);
+      box-shadow: 0 8px 22px rgba(86, 214, 255, 0.18);
+    }
+
+    .summary {
+      display: none;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .summary.visible {
+      display: grid;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(12, 17, 29, 0.68);
+    }
+
+    .stat-value {
+      display: block;
+      overflow: hidden;
+      color: white;
+      font-size: clamp(23px, 3vw, 34px);
+      font-weight: 900;
+      letter-spacing: -0.045em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .stat-label {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .gallery {
+      min-height: 260px;
+    }
+
+    .empty-state {
+      display: grid;
+      min-height: 300px;
+      place-items: center;
+      padding: 40px;
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      border-radius: 24px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.018);
+    }
+
+    .empty-icon {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--cyan);
+      font-size: 40px;
+    }
+
+    .group-section {
+      margin-bottom: 36px;
+    }
+
+    .group-section[hidden],
+    .badge-card[hidden] {
+      display: none;
+    }
+
+    .group-heading {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+    }
+
+    .group-title {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .group-count {
+      padding: 3px 8px;
+      border: 1px solid rgba(86, 214, 255, 0.22);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(86, 214, 255, 0.07);
+      font-size: 11px;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+
+    .badge-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 19px;
+      background: linear-gradient(160deg, rgba(24, 32, 51, 0.88), rgba(11, 16, 27, 0.94));
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .badge-card:hover {
+      z-index: 2;
+      border-color: rgba(86, 214, 255, 0.32);
+      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.32);
+      transform: translateY(-3px);
+    }
+
+    .badge-card.image-error {
+      border-color: rgba(255, 114, 136, 0.34);
+    }
+
+    .card-head {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 15px 11px;
+    }
+
+    .badge-name {
+      display: block;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .badge-id {
+      display: block;
+      overflow: hidden;
+      max-width: 190px;
+      margin-top: 2px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .group-tag {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      border-radius: 7px;
+      color: #c8d5eb;
+      background: rgba(255, 255, 255, 0.055);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .preview-stage {
+      position: relative;
+      display: grid;
+      min-height: 142px;
+      margin: 0 10px;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+    }
+
+    .preview-stage.dark {
+      background: #05070c;
+    }
+
+    .preview-stage.checker {
+      background-color: #111827;
+      background-image:
+        linear-gradient(45deg, #253047 25%, transparent 25%),
+        linear-gradient(-45deg, #253047 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #253047 75%),
+        linear-gradient(-45deg, transparent 75%, #253047 75%);
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      background-size: 20px 20px;
+    }
+
+    .preview-stage.light {
+      border-color: #d7deea;
+      background: #f2f5fa;
+    }
+
+    .preview-stage.poster {
+      background:
+        linear-gradient(180deg, rgba(8, 12, 24, 0.06), rgba(3, 5, 12, 0.88)),
+        radial-gradient(circle at 70% 20%, #6b4e81, transparent 32%),
+        linear-gradient(135deg, #263f64, #171126 58%, #07101d);
+    }
+
+    .preview-stage img {
+      display: block;
+      max-width: 94%;
+      max-height: 116px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.28));
+    }
+
+    .image-loading,
+    .image-error-label {
+      position: absolute;
+      inset: auto 10px 9px;
+      width: fit-content;
+      margin: auto;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .image-loading {
+      color: #bdeeff;
+      background: rgba(86, 214, 255, 0.11);
+    }
+
+    .image-error-label {
+      display: none;
+      color: #ffd1d8;
+      background: rgba(255, 114, 136, 0.13);
+    }
+
+    .badge-card.image-loaded .image-loading {
+      display: none;
+    }
+
+    .badge-card.image-error .image-loading {
+      display: none;
+    }
+
+    .badge-card.image-error .image-error-label {
+      display: block;
+    }
+
+    .card-footer {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px 13px;
+    }
+
+    .file-name {
+      overflow: hidden;
+      color: #8492a9;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .icon-button {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: #dce6f7;
+      background: rgba(255, 255, 255, 0.045);
+      text-decoration: none;
+    }
+
+    .icon-button.copied {
+      color: #06150f;
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .no-results {
+      display: none;
+      min-height: 220px;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .no-results.visible {
+      display: grid;
+    }
+
+    .footer-note {
+      margin-top: 30px;
+      color: #69768b;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 780px) {
+      .shell {
+        width: min(100% - 22px, 1440px);
+        padding-top: 28px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-mark {
+        display: none;
+      }
+
+      .url-row,
+      .toolbar-top {
+        grid-template-columns: 1fr;
+      }
+
+      .primary-button {
+        width: 100%;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .badge-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Animated badge inspector</div>
+        <h1>Xem badge từ một đường link.</h1>
+        <p class="hero-copy">Dán link cấu hình <strong>badges.json</strong> để xem trước toàn bộ icon động, kiểm tra nhóm, tìm kiếm nhanh và phát hiện ảnh tải lỗi.</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true">B+</div>
+    </header>
+
+    <section class="panel loader-panel" aria-labelledby="config-label">
+      <form id="config-form">
+        <label class="loader-label" id="config-label" for="config-url">Link cấu hình badges</label>
+        <div class="url-row">
+          <input
+            class="url-input"
+            id="config-url"
+            name="config-url"
+            type="url"
+            inputmode="url"
+            autocomplete="url"
+            spellcheck="false"
+            placeholder="https://raw.githubusercontent.com/.../badges.json"
+            aria-describedby="config-help"
+            required
+          >
+          <button class="primary-button" id="load-button" type="submit">Tải danh sách</button>
+        </div>
+      </form>
+      <div class="loader-help" id="config-help">
+        <span>Hỗ trợ link Raw GitHub và link GitHub dạng <code>/blob/</code>.</span>
+        <span>GIF lớn sẽ được tải dần khi cuộn trang.</span>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-text"></span>
+      </div>
+    </section>
+
+    <section class="panel toolbar" id="toolbar" aria-label="Bộ lọc xem trước">
+      <div class="toolbar-top">
+        <input class="search-input" id="search-input" type="search" placeholder="Tìm theo tên, ID hoặc pattern..." aria-label="Tìm badge">
+        <select class="select-input" id="background-select" aria-label="Nền xem trước">
+          <option value="dark">Nền tối</option>
+          <option value="checker">Caro trong suốt</option>
+          <option value="poster">Poster phim</option>
+          <option value="light">Nền sáng</option>
+        </select>
+        <button class="ghost-button" id="refresh-button" type="button">Phát lại GIF</button>
+      </div>
+      <div class="group-tabs" id="group-tabs" aria-label="Lọc theo nhóm"></div>
+    </section>
+
+    <section class="summary" id="summary" aria-label="Thống kê badge">
+      <div class="stat">
+        <span class="stat-value" id="stat-total">0</span>
+        <span class="stat-label">Tổng badge</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-shown">0</span>
+        <span class="stat-label">Đang hiển thị</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-loaded">0</span>
+        <span class="stat-label">Đã tải ảnh</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-failed">0</span>
+        <span class="stat-label">Ảnh lỗi</span>
+      </div>
+    </section>
+
+    <section class="gallery" id="gallery" aria-live="polite">
+      <div class="empty-state" id="empty-state">
+        <div>
+          <span class="empty-icon" aria-hidden="true">◇</span>
+          <strong>Nhập link badges.json để bắt đầu</strong><br>
+          Trang sẽ tự động chia icon theo nhóm trong file cấu hình.
+        </div>
+      </div>
+      <div class="no-results" id="no-results">Không tìm thấy badge phù hợp với bộ lọc hiện tại.</div>
+    </section>
+
+    <p class="footer-note">Badge Link Preview · Trang HTML độc lập, không cần cài đặt.</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DEFAULT_CONFIG_URL = "https://raw.githubusercontent.com/9000000/Badges-Vip/tet/badges.json";
+      const STORAGE_KEY = "badge-link-preview-config";
+      const state = {
+        badges: [],
+        groups: [],
+        activeGroup: "all",
+        query: "",
+        background: "dark",
+        loaded: 0,
+        failed: 0,
+        renderToken: 0,
+        controller: null
+      };
+
+      const elements = {
+        form: document.getElementById("config-form"),
+        url: document.getElementById("config-url"),
+        loadButton: document.getElementById("load-button"),
+        status: document.getElementById("status"),
+        statusText: document.getElementById("status-text"),
+        toolbar: document.getElementById("toolbar"),
+        search: document.getElementById("search-input"),
+        background: document.getElementById("background-select"),
+        refresh: document.getElementById("refresh-button"),
+        groupTabs: document.getElementById("group-tabs"),
+        summary: document.getElementById("summary"),
+        gallery: document.getElementById("gallery"),
+        empty: document.getElementById("empty-state"),
+        noResults: document.getElementById("no-results"),
+        statTotal: document.getElementById("stat-total"),
+        statShown: document.getElementById("stat-shown"),
+        statLoaded: document.getElementById("stat-loaded"),
+        statFailed: document.getElementById("stat-failed")
+      };
+
+      function normaliseConfigUrl(value) {
+        const trimmed = String(value || "").trim();
+        if (!trimmed) {
+          throw new Error("Vui lòng nhập link badges.json.");
+        }
+
+        let url;
+        try {
+          url = new URL(trimmed);
+        } catch {
+          throw new Error("Link không hợp lệ. Hãy dùng URL bắt đầu bằng http:// hoặc https://.");
+        }
+
+        if (!/^https?:$/.test(url.protocol)) {
+          throw new Error("Trang chỉ tải cấu hình từ link HTTP hoặc HTTPS.");
+        }
+
+        if (url.hostname === "github.com") {
+          const parts = url.pathname.split("/").filter(Boolean);
+          const blobIndex = parts.indexOf("blob");
+          if (blobIndex === 2 && parts.length > 4) {
+            const owner = parts[0];
+            const repo = parts[1];
+            const branch = parts[3];
+            const filePath = parts.slice(4).join("/");
+            return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+          }
+        }
+
+        return url.href;
+      }
+
+      function resolveImageUrl(rawUrl, configUrl) {
+        const value = String(rawUrl || "").trim();
+        if (!value) return "";
+        try {
+          return new URL(value, configUrl).href;
+        } catch {
+          return "";
+        }
+      }
+
+      function parseConfig(data, configUrl) {
+        const rawFilters = Array.isArray(data) ? data : data && data.filters;
+        if (!Array.isArray(rawFilters)) {
+          throw new Error("Không tìm thấy mảng filters trong file JSON.");
+        }
+
+        const rawGroups = data && Array.isArray(data.groups) ? data.groups : [];
+        const groupNameById = new Map();
+        rawGroups.forEach((group) => {
+          if (!group || group.id == null) return;
+          groupNameById.set(String(group.id), String(group.name || group.id));
+        });
+
+        const badges = rawFilters.map((filter, index) => {
+          const item = filter || {};
+          const groupId = String(item.groupId || item.group || "other");
+          const rawImage = item.imageURL || item.imageUrl || item.image || item.icon || item.url;
+          return {
+            id: String(item.id || `badge-${index + 1}`),
+            name: String(item.name || item.title || item.id || `Badge ${index + 1}`),
+            groupId,
+            groupName: groupNameById.get(groupId) || groupId,
+            pattern: String(item.pattern || ""),
+            imageURL: resolveImageUrl(rawImage, configUrl)
+          };
+        }).filter((badge) => badge.imageURL);
+
+        if (!badges.length) {
+          throw new Error("File JSON không chứa badge nào có imageURL hợp lệ.");
+        }
+
+        const presentGroups = new Set(badges.map((badge) => badge.groupId));
+        const groups = [];
+        rawGroups.forEach((group) => {
+          if (!group || group.id == null) return;
+          const id = String(group.id);
+          if (presentGroups.has(id) && !groups.some((entry) => entry.id === id)) {
+            groups.push({ id, name: String(group.name || id) });
+          }
+        });
+        badges.forEach((badge) => {
+          if (!groups.some((group) => group.id === badge.groupId)) {
+            groups.push({ id: badge.groupId, name: badge.groupName });
+          }
+        });
+
+        return { badges, groups };
+      }
+
+      function setStatus(type, message) {
+        elements.status.className = `status visible ${type}`;
+        elements.statusText.textContent = message;
+      }
+
+      function setLoading(loading) {
+        elements.loadButton.disabled = loading;
+        elements.loadButton.textContent = loading ? "Đang tải..." : "Tải danh sách";
+      }
+
+      async function loadConfig(value) {
+        let configUrl;
+        try {
+          configUrl = normaliseConfigUrl(value);
+        } catch (error) {
+          setStatus("error", error.message);
+          return;
+        }
+
+        if (state.controller) state.controller.abort();
+        const controller = new AbortController();
+        state.controller = controller;
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        setLoading(true);
+        setStatus("loading", "Đang tải và đọc cấu hình badge...");
+
+        try {
+          const response = await fetch(configUrl, {
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+            signal: controller.signal
+          });
+          if (!response.ok) {
+            throw new Error(`Máy chủ trả về lỗi ${response.status} ${response.statusText}.`);
+          }
+
+          const data = await response.json();
+          const parsed = parseConfig(data, configUrl);
+          state.badges = parsed.badges;
+          state.groups = parsed.groups;
+          state.activeGroup = "all";
+          state.query = "";
+          state.loaded = 0;
+          state.failed = 0;
+          state.renderToken += 1;
+
+          elements.url.value = configUrl;
+          elements.search.value = "";
+          try {
+            localStorage.setItem(STORAGE_KEY, configUrl);
+          } catch {
+            // Storage may be unavailable for local files; preview still works.
+          }
+
+          renderGroupTabs();
+          renderGallery();
+          elements.toolbar.classList.add("visible");
+          elements.summary.classList.add("visible");
+          elements.empty.style.display = "none";
+          document.title = `Badge Preview · ${state.badges.length} icons`;
+          setStatus("success", `Đã đọc ${state.badges.length} badge trong ${state.groups.length} nhóm.`);
+        } catch (error) {
+          if (error.name === "AbortError") {
+            setStatus("error", "Hết thời gian tải. Hãy kiểm tra link hoặc kết nối mạng rồi thử lại.");
+          } else if (error instanceof SyntaxError) {
+            setStatus("error", "Nội dung tải về không phải JSON hợp lệ.");
+          } else {
+            setStatus("error", `${error.message} Nếu link mở được nhưng trang vẫn lỗi, máy chủ có thể chưa cho phép CORS.`);
+          }
+        } finally {
+          clearTimeout(timeout);
+          if (state.controller === controller) state.controller = null;
+          setLoading(false);
+        }
+      }
+
+      function renderGroupTabs() {
+        elements.groupTabs.replaceChildren();
+        const allButton = createGroupButton("all", `Tất cả (${state.badges.length})`);
+        elements.groupTabs.appendChild(allButton);
+
+        state.groups.forEach((group) => {
+          const count = state.badges.filter((badge) => badge.groupId === group.id).length;
+          elements.groupTabs.appendChild(createGroupButton(group.id, `${group.name} (${count})`));
+        });
+      }
+
+      function createGroupButton(id, label) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `group-button${state.activeGroup === id ? " active" : ""}`;
+        button.dataset.group = id;
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          state.activeGroup = id;
+          elements.groupTabs.querySelectorAll(".group-button").forEach((item) => {
+            item.classList.toggle("active", item.dataset.group === id);
+          });
+          applyFilters();
+        });
+        return button;
+      }
+
+      function renderGallery() {
+        elements.gallery.querySelectorAll(".group-section").forEach((section) => section.remove());
+        elements.noResults.classList.remove("visible");
+        const token = state.renderToken;
+
+        state.groups.forEach((group) => {
+          const groupBadges = state.badges.filter((badge) => badge.groupId === group.id);
+          if (!groupBadges.length) return;
+
+          const section = document.createElement("section");
+          section.className = "group-section";
+          section.dataset.group = group.id;
+
+          const heading = document.createElement("div");
+          heading.className = "group-heading";
+          const title = document.createElement("h2");
+          title.className = "group-title";
+          title.textContent = group.name;
+          const count = document.createElement("span");
+          count.className = "group-count";
+          count.textContent = String(groupBadges.length);
+          title.appendChild(count);
+          heading.appendChild(title);
+
+          const grid = document.createElement("div");
+          grid.className = "badge-grid";
+          groupBadges.forEach((badge) => grid.appendChild(createBadgeCard(badge, token)));
+
+          section.append(heading, grid);
+          elements.gallery.insertBefore(section, elements.noResults);
+        });
+
+        applyBackground();
+        applyFilters();
+        updateStats();
+      }
+
+      function createBadgeCard(badge, token) {
+        const card = document.createElement("article");
+        card.className = "badge-card";
+        card.dataset.group = badge.groupId;
+        card.dataset.search = `${badge.name} ${badge.id} ${badge.groupName} ${badge.pattern}`.toLocaleLowerCase("vi");
+
+        const head = document.createElement("div");
+        head.className = "card-head";
+        const identity = document.createElement("div");
+        identity.style.minWidth = "0";
+        const name = document.createElement("span");
+        name.className = "badge-name";
+        name.textContent = badge.name;
+        const id = document.createElement("span");
+        id.className = "badge-id";
+        id.textContent = badge.id;
+        identity.append(name, id);
+        const tag = document.createElement("span");
+        tag.className = "group-tag";
+        tag.textContent = badge.groupName;
+        head.append(identity, tag);
+
+        const stage = document.createElement("div");
+        stage.className = `preview-stage ${state.background}`;
+        const image = document.createElement("img");
+        image.alt = badge.name;
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.dataset.baseUrl = badge.imageURL;
+        image.src = badge.imageURL;
+        const loading = document.createElement("span");
+        loading.className = "image-loading";
+        loading.textContent = "Đang tải";
+        const error = document.createElement("span");
+        error.className = "image-error-label";
+        error.textContent = "Không tải được ảnh";
+        stage.append(image, loading, error);
+
+        image.addEventListener("load", () => {
+          if (state.renderToken !== token || card.classList.contains("image-loaded")) return;
+          if (card.classList.contains("image-error")) {
+            card.classList.remove("image-error");
+            state.failed = Math.max(0, state.failed - 1);
+          }
+          card.classList.add("image-loaded");
+          state.loaded += 1;
+          updateStats();
+        });
+
+        image.addEventListener("error", () => {
+          if (state.renderToken !== token || card.classList.contains("image-error")) return;
+          if (card.classList.contains("image-loaded")) {
+            card.classList.remove("image-loaded");
+            state.loaded = Math.max(0, state.loaded - 1);
+          }
+          card.classList.add("image-error");
+          state.failed += 1;
+          updateStats();
+        });
+
+        const footer = document.createElement("div");
+        footer.className = "card-footer";
+        const file = document.createElement("span");
+        file.className = "file-name";
+        file.textContent = getFileName(badge.imageURL);
+        file.title = badge.imageURL;
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.className = "icon-button";
+        copy.title = "Sao chép link ảnh";
+        copy.setAttribute("aria-label", `Sao chép link ${badge.name}`);
+        copy.textContent = "⧉";
+        copy.addEventListener("click", async () => {
+          const copied = await copyText(badge.imageURL);
+          if (!copied) return;
+          copy.classList.add("copied");
+          copy.textContent = "✓";
+          setTimeout(() => {
+            copy.classList.remove("copied");
+            copy.textContent = "⧉";
+          }, 1200);
+        });
+
+        const open = document.createElement("a");
+        open.className = "icon-button";
+        open.href = badge.imageURL;
+        open.target = "_blank";
+        open.rel = "noopener noreferrer";
+        open.title = "Mở ảnh gốc";
+        open.setAttribute("aria-label", `Mở ảnh gốc ${badge.name}`);
+        open.textContent = "↗";
+        actions.append(copy, open);
+        footer.append(file, actions);
+
+        card.append(head, stage, footer);
+        return card;
+      }
+
+      function getFileName(url) {
+        try {
+          const parsed = new URL(url);
+          return decodeURIComponent(parsed.pathname.split("/").pop() || parsed.hostname);
+        } catch {
+          return url;
+        }
+      }
+
+      async function copyText(value) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch {
+          const input = document.createElement("textarea");
+          input.value = value;
+          input.style.position = "fixed";
+          input.style.opacity = "0";
+          document.body.appendChild(input);
+          input.select();
+          const copied = document.execCommand("copy");
+          input.remove();
+          return copied;
+        }
+      }
+
+      function applyFilters() {
+        const query = state.query.trim().toLocaleLowerCase("vi");
+        let shown = 0;
+
+        elements.gallery.querySelectorAll(".group-section").forEach((section) => {
+          let sectionShown = 0;
+          section.querySelectorAll(".badge-card").forEach((card) => {
+            const groupMatch = state.activeGroup === "all" || card.dataset.group === state.activeGroup;
+            const queryMatch = !query || card.dataset.search.includes(query);
+            const visible = groupMatch && queryMatch;
+            card.hidden = !visible;
+            if (visible) {
+              shown += 1;
+              sectionShown += 1;
+            }
+          });
+          section.hidden = sectionShown === 0;
+          const count = section.querySelector(".group-count");
+          if (count) count.textContent = String(sectionShown);
+        });
+
+        elements.noResults.classList.toggle("visible", state.badges.length > 0 && shown === 0);
+        elements.statShown.textContent = String(shown);
+      }
+
+      function applyBackground() {
+        elements.gallery.querySelectorAll(".preview-stage").forEach((stage) => {
+          stage.classList.remove("dark", "checker", "light", "poster");
+          stage.classList.add(state.background);
+        });
+      }
+
+      function updateStats() {
+        elements.statTotal.textContent = String(state.badges.length);
+        elements.statLoaded.textContent = String(state.loaded);
+        elements.statFailed.textContent = String(state.failed);
+      }
+
+      function refreshImages() {
+        state.loaded = 0;
+        state.failed = 0;
+        const stamp = Date.now().toString(36);
+
+        elements.gallery.querySelectorAll(".badge-card").forEach((card) => {
+          card.classList.remove("image-loaded", "image-error");
+          const image = card.querySelector("img");
+          if (!image) return;
+          let refreshed = image.dataset.baseUrl;
+          try {
+            const url = new URL(refreshed);
+            url.searchParams.set("preview", stamp);
+            refreshed = url.href;
+          } catch {
+            refreshed += `${refreshed.includes("?") ? "&" : "?"}preview=${stamp}`;
+          }
+          image.src = refreshed;
+        });
+        updateStats();
+      }
+
+      elements.form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        loadConfig(elements.url.value);
+      });
+
+      elements.search.addEventListener("input", () => {
+        state.query = elements.search.value;
+        applyFilters();
+      });
+
+      elements.background.addEventListener("change", () => {
+        state.background = elements.background.value;
+        applyBackground();
+      });
+
+      elements.refresh.addEventListener("click", refreshImages);
+
+      let initialUrl = DEFAULT_CONFIG_URL;
+      try {
+        const queryUrl = new URLSearchParams(location.search).get("config");
+        const savedUrl = localStorage.getItem(STORAGE_KEY);
+        initialUrl = queryUrl || savedUrl || DEFAULT_CONFIG_URL;
+      } catch {
+        // Local storage can be disabled without affecting the preview.
+      }
+      elements.url.value = initialUrl;
+      loadConfig(initialUrl);
+    })();
+  </script>
+</body>
+</html>

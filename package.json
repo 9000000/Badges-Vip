@@ -4,7 +4,8 @@
   "description": "Modern Animated Media Badges Suite",
   "main": "index.js",
   "scripts": {
-    "generate": "node scripts/generate_badges.js"
+    "generate": "node scripts/generate_badges.js",
+    "import:reference": "node scripts/import_reference_badges.js"
   },
   "repository": {
     "type": "git",

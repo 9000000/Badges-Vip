@@ -1,10 +1,10 @@
 # 💎 Badges-Vip: Modern Animated Media Badges
 
-> **Bộ sưu tập 31 huy hiệu (badges) động định dạng `.gif` phong cách Darpit Animated Deluxe: glitch RGB, khói–mực, scan điện ảnh, light burst và sóng không gian ở 33 FPS dành cho VidHub, Infuse, Jellyfin, Plex, Kodi, Stremio.**
+> **Bộ sưu tập 128 huy hiệu (badges) động định dạng `.gif` phong cách Darpit Animated Deluxe: glitch RGB, khói–mực, scan điện ảnh, light burst và sóng không gian dành cho VidHub, Infuse, Jellyfin, Plex, Kodi, Stremio.**
 
-[![Badges](https://img.shields.io/badge/Total%20Badges-31-blue.svg?style=for-the-badge)](#)
+[![Badges](https://img.shields.io/badge/Total%20Badges-128-blue.svg?style=for-the-badge)](#)
 [![Format](https://img.shields.io/badge/Format-Animated%20GIF-purple.svg?style=for-the-badge)](#)
-[![Framerate](https://img.shields.io/badge/Framerate-33%20FPS-green.svg?style=for-the-badge)](#)
+[![Loop](https://img.shields.io/badge/Loop-4.5%20seconds-green.svg?style=for-the-badge)](#)
 [![Theme](https://img.shields.io/badge/Theme-Dark%20Glassmorphism-gold.svg?style=for-the-badge)](#)
 
 ---
@@ -19,7 +19,7 @@ https://raw.githubusercontent.com/9000000/Badges-Vip/tet/badges.json
 
 ---
 
-## 🎬 Danh sách toàn bộ Huy Hiệu (31 Badges)
+## 🎬 Bộ huy hiệu cốt lõi (31 Badges)
 
 ### 1. Nguồn phát (Source)
 | Tên | Huy hiệu | Hiệu ứng |
@@ -88,6 +88,25 @@ https://raw.githubusercontent.com/9000000/Badges-Vip/tet/badges.json
 
 ---
 
+## ✨ Bộ nhãn mở rộng (97 Badges)
+
+| Nhóm | Số lượng mới | Nội dung |
+| :--- | ---: | :--- |
+| Special Tags | 15 | SEADEX, HYBRID, CRITERION, PROPER, REPACK, REMASTERED, OPEN MATTE, REGRADED, DIR CUT, EXTENDED, UNCUT, UNCENSORED, BLACK & WHITE, TRUE-HUE, THTR |
+| Source | 17 | REMUX 1–3, BLU-RAY 1–8, WEB 1–6 |
+| Resolution | 5 | 1440p, 576p, 360p, 240p, 144p |
+| Quality | 6 | HDRip, HC HDRip, SCR, TC, TS, CAM |
+| Video Tech | 5 | DV · HDR10+, DV · HDR10, DV · HDR, HLG, AI |
+| Audio Tech | 8 | ATMOS TRUEHD, DTS:X HD MA, ATMOS DIGITAL+, DTS:X HD, FLAC, DTS-ES, OPUS, AAC |
+| Audio Channels | 2 | 6.1, 2.0 |
+| Video Codec | 3 | AV1, XviD, DivX |
+| Streaming | 9 | PEACOCK, NETFLIX, PRIME VIDEO, APPLE TV+, DISNEY+, HBO MAX, HULU, PARAMOUNT+, CRUNCHYROLL |
+| Language | 27 | ENG, ESP, LAT, SPA, FRE, GER, ITA, BRA, POR, TUR, POL, UKR, IND, THA, VIE, JPN, KOR, CHI, HIN, ARA, RUS, GRE, CZE, SVK, SLO, SWE, MUL |
+
+Các nhãn chỉ khác cách viết nhưng trùng nghĩa với bộ cốt lõi đã được loại bỏ để tránh hiển thị hai badge cho cùng một thuộc tính.
+
+---
+
 ## 🛠 Tùy biến & Tái tạo (Development)
 
 Cài đặt dependencies và tạo lại toàn bộ file GIF:
@@ -96,13 +115,19 @@ npm install
 npm run generate
 ```
 
-Mỗi GIF gồm 150 khung hình, 30 ms/khung (~33 FPS), lặp vô hạn trong 4,5 giây. Sau phần mở đầu, pha giữ tiếp tục có glow màu, quét sáng, hạt năng lượng và sparkle chuyển động. Chỉ tạo lại một số badge khi phát triển:
+Bộ cốt lõi dùng 150 khung hình ở 30 ms/khung; bộ mở rộng dùng 90 khung hình ở 50 ms/khung để tối ưu dung lượng. Cả hai đều lặp vô hạn trong 4,5 giây với glow màu, quét sáng, hạt năng lượng và sparkle chuyển động. Chỉ tạo lại một số badge khi phát triển:
 ```bash
 node scripts/generate_badges.js --only=remux.gif,4k_ultra_hd.gif
 ```
 
+Nhập lại danh sách tham khảo và chỉ tạo bộ mở rộng:
+```bash
+npm run import:reference
+npm run generate -- --imported
+```
+
 Xem trước toàn bộ bộ sưu tập tương tác:
-Mở file `preview_gallery.html` trong trình duyệt bất kỳ.
+Mở file `badge_link_preview.html`, nhập link `badges.json` và bấm **Tải danh sách**.
 
 ---
 

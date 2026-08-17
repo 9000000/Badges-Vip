@@ -1,0 +1,781 @@
+{
+  "source": "https://gist.githubusercontent.com/hung319/6733cbacf9ead4cb79e314a7c47a2f52/raw/be8e333f85d09f892ea8958ede2dc84338882fd4/gistfile1.txt",
+  "badges": [
+    {
+      "id": "seadex-release",
+      "png": "seadex.png",
+      "gif": "seadex.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "hybrid-release",
+      "png": "hybrid.png",
+      "gif": "hybrid.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "criterion-collection",
+      "png": "criterion.png",
+      "gif": "criterion.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "proper-release",
+      "png": "proper.png",
+      "gif": "proper.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "repack-release",
+      "png": "repack.png",
+      "gif": "repack.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "remastered-release",
+      "png": "remastered.png",
+      "gif": "remastered.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "open-matte-edition",
+      "png": "open_matte.png",
+      "gif": "open_matte.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "regraded-release",
+      "png": "regraded.png",
+      "gif": "regraded.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "edition-directors-cut",
+      "png": "dir_cut.png",
+      "gif": "dir_cut.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "edition-extended",
+      "png": "extended.png",
+      "gif": "extended.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "uncut-edition",
+      "png": "uncut.png",
+      "gif": "uncut.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "uncensored-edition",
+      "png": "uncensored.png",
+      "gif": "uncensored.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "black-and-white",
+      "png": "black_and_white.png",
+      "gif": "black_and_white.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "true-hue-edition",
+      "png": "true_hue.png",
+      "gif": "true_hue.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "edition-theatrical",
+      "png": "thtr.png",
+      "gif": "thtr.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "remux-1",
+      "png": "remux_1.png",
+      "gif": "remux_1.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "remux-2",
+      "png": "remux_2.png",
+      "gif": "remux_2.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "remux-3",
+      "png": "remux_3.png",
+      "gif": "remux_3.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-1",
+      "png": "blu_ray_1.png",
+      "gif": "blu_ray_1.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-2",
+      "png": "blu_ray_2.png",
+      "gif": "blu_ray_2.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-3",
+      "png": "blu_ray_3.png",
+      "gif": "blu_ray_3.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-4",
+      "png": "blu_ray_4.png",
+      "gif": "blu_ray_4.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-5",
+      "png": "blu_ray_5.png",
+      "gif": "blu_ray_5.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-6",
+      "png": "blu_ray_6.png",
+      "gif": "blu_ray_6.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-7",
+      "png": "blu_ray_7.png",
+      "gif": "blu_ray_7.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "blu-ray-8",
+      "png": "blu_ray_8.png",
+      "gif": "blu_ray_8.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-1",
+      "png": "web_1.png",
+      "gif": "web_1.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-2",
+      "png": "web_2.png",
+      "gif": "web_2.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-3",
+      "png": "web_3.png",
+      "gif": "web_3.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-4",
+      "png": "web_4.png",
+      "gif": "web_4.gif",
+      "effect": "blue",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-5",
+      "png": "web_5.png",
+      "gif": "web_5.gif",
+      "effect": "cyan",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "web-6",
+      "png": "web_6.png",
+      "gif": "web_6.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "r-1440p",
+      "png": "1440p.png",
+      "gif": "1440p.gif",
+      "effect": "cyan",
+      "intro": "ink",
+      "collection": "reference"
+    },
+    {
+      "id": "r-576p",
+      "png": "576p.png",
+      "gif": "576p.gif",
+      "effect": "cyan",
+      "intro": "ink",
+      "collection": "reference"
+    },
+    {
+      "id": "r-360p",
+      "png": "360p.png",
+      "gif": "360p.gif",
+      "effect": "silver",
+      "intro": "ink",
+      "collection": "reference"
+    },
+    {
+      "id": "r-240p",
+      "png": "240p.png",
+      "gif": "240p.gif",
+      "effect": "cyan",
+      "intro": "ink",
+      "collection": "reference"
+    },
+    {
+      "id": "r-144p",
+      "png": "144p.png",
+      "gif": "144p.gif",
+      "effect": "green",
+      "intro": "ink",
+      "collection": "reference"
+    },
+    {
+      "id": "src-hdrip",
+      "png": "hdrip.png",
+      "gif": "hdrip.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gq-hc-hdrip",
+      "png": "hc_hdrip.png",
+      "gif": "hc_hdrip.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gq-scr",
+      "png": "scr.png",
+      "gif": "scr.gif",
+      "effect": "gold",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gq-tc",
+      "png": "tc.png",
+      "gif": "tc.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gq-ts",
+      "png": "ts.png",
+      "gif": "ts.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gq-cam",
+      "png": "cam.png",
+      "gif": "cam.gif",
+      "effect": "purple",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "v-dv-hdr10p",
+      "png": "dv_hdr10_plus.png",
+      "gif": "dv_hdr10_plus.gif",
+      "effect": "rainbow",
+      "intro": "burst",
+      "collection": "reference"
+    },
+    {
+      "id": "v-dv-hdr10",
+      "png": "dv_hdr10.png",
+      "gif": "dv_hdr10.gif",
+      "effect": "orange",
+      "intro": "burst",
+      "collection": "reference"
+    },
+    {
+      "id": "v-dv-hdr",
+      "png": "dv_hdr.png",
+      "gif": "dv_hdr.gif",
+      "effect": "gold",
+      "intro": "burst",
+      "collection": "reference"
+    },
+    {
+      "id": "v-hlg",
+      "png": "hlg.png",
+      "gif": "hlg.gif",
+      "effect": "rainbow",
+      "intro": "burst",
+      "collection": "reference"
+    },
+    {
+      "id": "v-ai",
+      "png": "ai.png",
+      "gif": "ai.gif",
+      "effect": "orange",
+      "intro": "burst",
+      "collection": "reference"
+    },
+    {
+      "id": "a-atmos-truehd",
+      "png": "atmos_truehd.png",
+      "gif": "atmos_truehd.gif",
+      "effect": "purple",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-dtsx-hdma",
+      "png": "dts_x_hd_ma.png",
+      "gif": "dts_x_hd_ma.gif",
+      "effect": "orange",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-atmos-ddplus",
+      "png": "atmos_digital_plus.png",
+      "gif": "atmos_digital_plus.gif",
+      "effect": "purple",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-dtsx-hd",
+      "png": "dts_x_hd.png",
+      "gif": "dts_x_hd.gif",
+      "effect": "gold",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-flac",
+      "png": "flac.png",
+      "gif": "flac.gif",
+      "effect": "orange",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "gv-dts-es",
+      "png": "dts_es.png",
+      "gif": "dts_es.gif",
+      "effect": "gold",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-opus",
+      "png": "opus.png",
+      "gif": "opus.gif",
+      "effect": "cyan",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "a-aac",
+      "png": "aac.png",
+      "gif": "aac.gif",
+      "effect": "purple",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "ch-61",
+      "png": "6_1.png",
+      "gif": "6_1.gif",
+      "effect": "cyan",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "ch-20",
+      "png": "2_0.png",
+      "gif": "2_0.gif",
+      "effect": "blue",
+      "intro": "wave",
+      "collection": "reference"
+    },
+    {
+      "id": "ge-av1",
+      "png": "av1.png",
+      "gif": "av1.gif",
+      "effect": "green",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "ge-xvid",
+      "png": "xvid.png",
+      "gif": "xvid.gif",
+      "effect": "orange",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "ge-divx",
+      "png": "divx.png",
+      "gif": "divx.gif",
+      "effect": "green",
+      "intro": "glitch",
+      "collection": "reference"
+    },
+    {
+      "id": "gs-peacock",
+      "png": "peacock.png",
+      "gif": "peacock.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-nflx",
+      "png": "netflix.png",
+      "gif": "netflix.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-amzn",
+      "png": "prime_video.png",
+      "gif": "prime_video.gif",
+      "effect": "purple",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-atvp",
+      "png": "apple_tv_plus.png",
+      "gif": "apple_tv_plus.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-dsnp",
+      "png": "disney_plus.png",
+      "gif": "disney_plus.gif",
+      "effect": "purple",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-hmax",
+      "png": "hbo_max.png",
+      "gif": "hbo_max.gif",
+      "effect": "purple",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-hulu",
+      "png": "hulu.png",
+      "gif": "hulu.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-pamp",
+      "png": "paramount_plus.png",
+      "gif": "paramount_plus.gif",
+      "effect": "purple",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "s-croll",
+      "png": "crunchyroll.png",
+      "gif": "crunchyroll.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-en",
+      "png": "eng.png",
+      "gif": "eng.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-es",
+      "png": "esp.png",
+      "gif": "esp.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f5",
+      "png": "lat.png",
+      "gif": "lat.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f6",
+      "png": "spa.png",
+      "gif": "spa.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-fr",
+      "png": "fre.png",
+      "gif": "fre.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-de",
+      "png": "ger.png",
+      "gif": "ger.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-it",
+      "png": "ita.png",
+      "gif": "ita.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-pt-br",
+      "png": "bra.png",
+      "gif": "bra.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-pt-pt",
+      "png": "por.png",
+      "gif": "por.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-tr",
+      "png": "tur.png",
+      "gif": "tur.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-pl",
+      "png": "pol.png",
+      "gif": "pol.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-uk",
+      "png": "ukr.png",
+      "gif": "ukr.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-id",
+      "png": "ind.png",
+      "gif": "ind.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-th",
+      "png": "tha.png",
+      "gif": "tha.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-vi",
+      "png": "vie.png",
+      "gif": "vie.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-ja",
+      "png": "jpn.png",
+      "gif": "jpn.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-ko",
+      "png": "kor.png",
+      "gif": "kor.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-zh",
+      "png": "chi.png",
+      "gif": "chi.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-hi",
+      "png": "hin.png",
+      "gif": "hin.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-ar",
+      "png": "ara.png",
+      "gif": "ara.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-ru",
+      "png": "rus.png",
+      "gif": "rus.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-el",
+      "png": "gre.png",
+      "gif": "gre.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f1",
+      "png": "cze.png",
+      "gif": "cze.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f2",
+      "png": "svk.png",
+      "gif": "svk.gif",
+      "effect": "cyan",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f4",
+      "png": "slo.png",
+      "gif": "slo.gif",
+      "effect": "green",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "f3",
+      "png": "swe.png",
+      "gif": "swe.gif",
+      "effect": "rainbow",
+      "intro": "scan",
+      "collection": "reference"
+    },
+    {
+      "id": "l-mu",
+      "png": "mul.png",
+      "gif": "mul.gif",
+      "effect": "gold",
+      "intro": "scan",
+      "collection": "reference"
+    }
+  ]
+}
