@@ -1,1 +1,7 @@
 node_modules/
+scripts/
+scratch/
+badge_link_preview.html
+package-lock.json
+package.json
+preview_link.html
