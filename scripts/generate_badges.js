@@ -8,9 +8,9 @@ const BADGES_DIR = path.resolve(__dirname, '..', 'Badges');
 const TOTAL_FRAMES = 24;
 const FPS = 24;
 const DELAY = Math.round(1000 / FPS);
-const TARGET_HEIGHT = 150; // 2X HD resolution for razor-sharp anime outlines
+const TARGET_HEIGHT = 150; // 2X HD resolution for 3D Anime depth
 
-// 31 Anime-Style Animated Badges on branch 'tet'
+// 31 3D Anime-Style Badges on branch 'tet'
 const BADGES = [
   // Source
   { png: 'remux.png', gif: 'remux.gif', effect: 'anime_katana_slash' },
@@ -59,7 +59,7 @@ const BADGES = [
 ];
 
 async function generateAll() {
-  console.log(`Starting generation of ${BADGES.length} ANIME-STYLE animated GIF badges on branch 'tet'...`);
+  console.log(`Starting generation of ${BADGES.length} 3D ANIME-STYLE animated GIF badges on branch 'tet'...`);
 
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
@@ -77,7 +77,7 @@ async function generateAll() {
       continue;
     }
 
-    console.log(`[${i + 1}/${BADGES.length}] Processing ${item.png} -> ${item.gif} (Anime Effect: ${item.effect})...`);
+    console.log(`[${i + 1}/${BADGES.length}] Processing ${item.png} -> ${item.gif} (3D Anime Effect: ${item.effect})...`);
     const pngBase64 = fs.readFileSync(pngPath).toString('base64');
     const imgSrc = `data:image/png;base64,${pngBase64}`;
 
@@ -116,7 +116,7 @@ async function generateAll() {
       const aspect = cropW / cropH;
       const targetW = Math.round(targetH * aspect);
       const padX = 40;
-      const padY = 28;
+      const padY = 30;
       const canvasW = targetW + padX * 2;
       const canvasH = targetH + padY * 2;
 
@@ -138,77 +138,79 @@ async function generateAll() {
 
         // ==================== 1. ANIME BACKGROUND VFX LAYERS ====================
         if (effect === 'anime_super_saiyan' || effect === 'anime_golden_god_flash' || effect === 'anime_amber_dragon_aura') {
-          // Super Saiyan Rising Ki Aura Flames
           drawAnimeKiAura(ctx, drawX, drawY, targetW, targetH, t, '#fbbf24', '#f59e0b');
         } else if (effect === 'anime_crimson_flame' || effect === 'anime_fire_embers' || effect === 'anime_explosive_shockwave') {
-          // Fire Blaze Embers & Flame Wisps
           drawAnimeKiAura(ctx, drawX, drawY, targetW, targetH, t, '#f97316', '#ef4444');
         } else if (effect === 'anime_azure_spirit' || effect === 'anime_water_dragon_surge') {
-          // Spirit Blue Soul Flames
           drawAnimeKiAura(ctx, drawX, drawY, targetW, targetH, t, '#38bdf8', '#0284c7');
         } else if (effect === 'anime_void_equalizer' || effect === 'anime_plasma_arc') {
-          // Dark Void Violet Aura
           drawAnimeKiAura(ctx, drawX, drawY, targetW, targetH, t, '#c084fc', '#7c3aed');
         } else if (effect === 'anime_magic_circle') {
-          // Sacred Magic Geometry Summoning Runes
           drawAnimeMagicRunes(ctx, drawX + targetH * 0.4, drawY + targetH * 0.5, targetH * 0.45, t);
         } else if (effect === 'anime_rhythm_game_bars') {
-          // Anime Sound Rhythm Equalizer Bars
           drawAnimeRhythmBars(ctx, drawX, drawY, targetW, targetH, t);
         }
 
-        // ==================== 2. CRISP ARTWORK CONTOUR & AMBIENT SHADOW ====================
+        // ==================== 2. 3D ANIME DEPTH EXTRUSION & CAST SHADOW ====================
+        // 2a. Ambient deep drop shadow
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 2;
-        ctx.drawImage(offCanvas, minX, minY, cropW, cropH, drawX, drawY, targetW, targetH);
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 5;
+        ctx.drawImage(offCanvas, minX, minY, cropW, cropH, drawX + 3, drawY + 5, targetW, targetH);
         ctx.restore();
 
-        // ==================== 3. CRISP BASE ARTWORK ====================
+        // 2b. 3D Extrusion Bevels (giving depth to letters and icons)
+        const depthLevels = 4;
+        for (let d = depthLevels; d >= 1; d--) {
+          ctx.save();
+          const bevelCanvas = document.createElement('canvas');
+          bevelCanvas.width = canvasW;
+          bevelCanvas.height = canvasH;
+          const bctx = bevelCanvas.getContext('2d');
+          bctx.drawImage(offCanvas, minX, minY, cropW, cropH, drawX + d, drawY + d, targetW, targetH);
+          bctx.globalCompositeOperation = 'source-in';
+          bctx.fillStyle = `rgba(10, 15, 26, ${0.7 + d * 0.08})`;
+          bctx.fillRect(0, 0, canvasW, canvasH);
+          ctx.drawImage(bevelCanvas, 0, 0);
+          ctx.restore();
+        }
+
+        // ==================== 3. CRISP FRONT FACE ARTWORK ====================
         ctx.drawImage(offCanvas, minX, minY, cropW, cropH, drawX, drawY, targetW, targetH);
 
-        // ==================== 4. ANIME INNER GLOW & LIGHTNING / ENERGY MASKED TO ARTWORK ====================
+        // ==================== 4. SLOW & SOFT (SUBTLE) SPECULAR SHEEN MASKED TO ARTWORK ====================
         ctx.save();
         ctx.globalCompositeOperation = 'source-atop';
 
         if (effect === 'anime_magical_rainbow' || effect === 'anime_ultra_instinct_prism') {
-          // Ultra Instinct / Magical Rainbow Prism Fluid Aurora
+          // Soft fluid rainbow prism aurora
           const hueShift = (t * 360) % 360;
           const rainbowGrad = ctx.createLinearGradient(drawX, drawY, drawX + targetW, drawY + targetH);
-          rainbowGrad.addColorStop(0, `hsla(${hueShift}, 100%, 75%, 0.85)`);
-          rainbowGrad.addColorStop(0.25, `hsla(${(hueShift + 90) % 360}, 100%, 70%, 0.85)`);
-          rainbowGrad.addColorStop(0.5, `hsla(${(hueShift + 180) % 360}, 100%, 70%, 0.85)`);
-          rainbowGrad.addColorStop(0.75, `hsla(${(hueShift + 270) % 360}, 100%, 70%, 0.85)`);
-          rainbowGrad.addColorStop(1, `hsla(${hueShift}, 100%, 75%, 0.85)`);
+          rainbowGrad.addColorStop(0, `hsla(${hueShift}, 100%, 75%, 0.65)`);
+          rainbowGrad.addColorStop(0.25, `hsla(${(hueShift + 90) % 360}, 100%, 70%, 0.65)`);
+          rainbowGrad.addColorStop(0.5, `hsla(${(hueShift + 180) % 360}, 100%, 70%, 0.65)`);
+          rainbowGrad.addColorStop(0.75, `hsla(${(hueShift + 270) % 360}, 100%, 70%, 0.65)`);
+          rainbowGrad.addColorStop(1, `hsla(${hueShift}, 100%, 75%, 0.65)`);
           ctx.fillStyle = rainbowGrad;
           ctx.fillRect(0, 0, canvasW, canvasH);
-        } else if (effect === 'anime_katana_slash' || effect === 'anime_wind_slash') {
-          // Anime Katana Slash Glint
-          const slashPos = -canvasW * 0.4 + t * (canvasW * 2.0);
-          const slashGrad = ctx.createLinearGradient(slashPos, 0, slashPos + 60, canvasH);
-          slashGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          slashGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.98)');
-          slashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = slashGrad;
-          ctx.fillRect(0, 0, canvasW, canvasH);
         } else if (effect === 'anime_chidori_lightning' || effect === 'anime_cyber_lightning' || effect === 'anime_matrix_thunder' || effect === 'anime_pixel_thunder') {
-          // Electric Lightning Flashes inside the text
           const lColor = (effect === 'anime_cyber_lightning' || effect === 'anime_matrix_thunder') ? '#34d399' : '#38bdf8';
-          const flashPulse = (Math.sin(t * 8 * Math.PI) + 1) / 2;
+          const flashPulse = (Math.sin(t * 4 * Math.PI) + 1) / 2;
           ctx.fillStyle = lColor;
-          ctx.globalAlpha = 0.4 + 0.5 * flashPulse;
+          ctx.globalAlpha = 0.2 + 0.3 * flashPulse;
           ctx.fillRect(0, 0, canvasW, canvasH);
           ctx.globalAlpha = 1.0;
         } else {
-          // High-Intensity Anime Energy Sheen
-          const sheenX = -canvasW * 0.5 + t * (canvasW * 2.2);
-          const sheenGrad = ctx.createLinearGradient(sheenX, 0, sheenX + 80, canvasH);
+          // Soft, slow, subtle sheen sweep (nhạt hơn & quét chậm, êm ái)
+          const sheenX = -canvasW * 0.6 + t * (canvasW * 2.2);
+          const sheenW = 130; // Wide feathered band
+          const sheenGrad = ctx.createLinearGradient(sheenX, 0, sheenX + sheenW, canvasH);
           sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          sheenGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.7)');
-          sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 1.0)');
-          sheenGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)');
+          sheenGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.15)');
+          sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)'); // Soft subtle highlight
+          sheenGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.15)');
           sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
           ctx.fillStyle = sheenGrad;
           ctx.fillRect(0, 0, canvasW, canvasH);
@@ -217,78 +219,69 @@ async function generateAll() {
 
         // ==================== 5. ANIME FOREFRONT FLASHES, LIGHTNING & STARBURSTS ====================
         if (effect === 'anime_katana_slash') {
-          // High-Velocity Diagonal Anime Katana Blade Slash
-          const slashProgress = (t * 1.5) % 1;
+          const slashProgress = (t * 1.3) % 1;
           const sx1 = drawX - 30 + slashProgress * (targetW + 60);
           const sy1 = drawY - 20;
           const sx2 = sx1 + 50;
           const sy2 = drawY + targetH + 20;
           drawAnimeSlashStreak(ctx, sx1, sy1, sx2, sy2, '#38bdf8', '#ffffff');
-          drawAnimeStarburst(ctx, (sx1 + sx2) / 2, (sy1 + sy2) / 2, 16, slashProgress, '#38bdf8');
+          drawAnimeStarburst(ctx, (sx1 + sx2) / 2, (sy1 + sy2) / 2, 14, slashProgress, '#38bdf8');
         } else if (effect === 'anime_chidori_lightning' || effect === 'anime_cyber_lightning' || effect === 'anime_matrix_thunder' || effect === 'anime_plasma_arc') {
-          // Crackling Jagged Electric Lightning Bolts
           const lColor = (effect === 'anime_cyber_lightning' || effect === 'anime_matrix_thunder') ? '#10b981' : (effect === 'anime_plasma_arc' ? '#c084fc' : '#38bdf8');
           drawAnimeLightning(ctx, drawX + targetW * 0.1, drawY + targetH * 0.5, drawX + targetW * 0.9, drawY + targetH * 0.5, t, lColor);
-          drawAnimeLightning(ctx, drawX + targetW * 0.3, drawY + 10, drawX + targetW * 0.7, drawY + targetH - 10, (t + 0.3) % 1, '#ffffff');
         } else if (effect === 'anime_beam_saber' || effect === 'anime_cosmic_widescreen') {
-          // Anime Beam Saber Plasma Blast
           const beamX = drawX + t * targetW;
           const beamY = drawY + targetH * 0.5;
-          const bGrad = ctx.createLinearGradient(beamX - 110, beamY, beamX + 110, beamY);
+          const bGrad = ctx.createLinearGradient(beamX - 90, beamY, beamX + 90, beamY);
           bGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
-          bGrad.addColorStop(0.3, 'rgba(56, 189, 248, 0.6)');
-          bGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.98)');
-          bGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.6)');
+          bGrad.addColorStop(0.3, 'rgba(56, 189, 248, 0.4)');
+          bGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.85)');
+          bGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.4)');
           bGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
           ctx.fillStyle = bGrad;
-          ctx.fillRect(beamX - 110, beamY - 4, 220, 8);
-          drawAnimeStarburst(ctx, beamX, beamY, 18, (t * 2) % 1, '#38bdf8');
+          ctx.fillRect(beamX - 90, beamY - 3, 180, 6);
+          drawAnimeStarburst(ctx, beamX, beamY, 14, (t * 2) % 1, '#38bdf8');
         } else if (effect === 'anime_spatial_sky_barrier') {
-          // 3D Spatial Acoustic Barrier Sound Waves
           ctx.save();
           ctx.translate(drawX + targetW * 0.15, drawY + targetH * 0.5);
           for (let arc = 1; arc <= 3; arc++) {
             const wave = (t + arc / 3) % 1;
-            const r = 12 + wave * 36;
-            ctx.strokeStyle = `rgba(56, 189, 248, ${1 - wave})`;
-            ctx.lineWidth = 3.5;
+            const r = 12 + wave * 32;
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.8 - wave * 0.8})`;
+            ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(0, 0, r, 1.1 * Math.PI, 1.9 * Math.PI);
             ctx.stroke();
           }
           ctx.restore();
-          drawAnimeStarburst(ctx, drawX + targetW * 0.65, drawY + targetH * 0.3, 14, (t * 2) % 1, '#38bdf8');
+          drawAnimeStarburst(ctx, drawX + targetW * 0.65, drawY + targetH * 0.3, 12, (t * 2) % 1, '#38bdf8');
         } else if (effect === 'anime_explosive_shockwave') {
-          // Explosive Anime Shockwave Rings around ':X'
           ctx.save();
           ctx.translate(drawX + targetW * 0.85, drawY + targetH * 0.5);
           for (let w = 1; w <= 3; w++) {
             const wp = (t + w / 3) % 1;
-            ctx.strokeStyle = `rgba(249, 115, 22, ${1 - wp})`;
-            ctx.lineWidth = 3.5;
+            ctx.strokeStyle = `rgba(249, 115, 22, ${0.85 - wp * 0.85})`;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(0, 0, 10 + wp * 38, 0, 2 * Math.PI);
+            ctx.arc(0, 0, 10 + wp * 34, 0, 2 * Math.PI);
             ctx.stroke();
           }
           ctx.restore();
-          drawAnimeStarburst(ctx, drawX + targetW * 0.85, drawY + targetH * 0.5, 18, (t * 2) % 1, '#f97316');
+          drawAnimeStarburst(ctx, drawX + targetW * 0.85, drawY + targetH * 0.5, 14, (t * 2) % 1, '#f97316');
         } else if (effect === 'anime_8_orbital_summon' || effect === 'anime_5_orbital_summon') {
-          // Revolving Orbiting Satellite Magatama Orbs
           const spkCount = effect === 'anime_8_orbital_summon' ? 8 : 6;
           drawAnimeOrbitalOrbs(ctx, drawX + targetW * 0.18, drawY + targetH * 0.5, targetH * 0.38, spkCount, t);
         } else if (effect === 'anime_supernova_burst') {
-          // Supernova Starburst at the '+'
-          const plusPulse = 1 + Math.sin(t * 2 * Math.PI) * 0.4;
-          drawAnimeStarburst(ctx, drawX + targetW * 0.93, drawY + targetH * 0.35, 20 * plusPulse, 1, '#f59e0b');
+          const plusPulse = 1 + Math.sin(t * 2 * Math.PI) * 0.3;
+          drawAnimeStarburst(ctx, drawX + targetW * 0.93, drawY + targetH * 0.35, 16 * plusPulse, 1, '#f59e0b');
         } else if (effect === 'anime_mecha_hud') {
-          // Anime Sci-Fi Mecha HUD Target Reticle
           drawAnimeMechaHud(ctx, drawX, drawY, targetW, targetH, t);
         }
 
-        // Diamond 8-point cross starbursts for anime flair
+        // Diamond starbursts
         if (effect.includes('flash') || effect.includes('sparkle') || effect.includes('gold') || effect.includes('rainbow') || effect === 'anime_katana_slash') {
-          drawAnimeStarburst(ctx, drawX + targetW * 0.18, drawY + targetH * 0.22, 15, (t * 2) % 1, '#ffffff');
-          drawAnimeStarburst(ctx, drawX + targetW * 0.82, drawY + targetH * 0.78, 14, (t * 2 + 0.5) % 1, '#ffffff');
+          drawAnimeStarburst(ctx, drawX + targetW * 0.18, drawY + targetH * 0.22, 13, (t * 2) % 1, '#ffffff');
+          drawAnimeStarburst(ctx, drawX + targetW * 0.82, drawY + targetH * 0.78, 11, (t * 2 + 0.5) % 1, '#ffffff');
         }
 
         const frameData = ctx.getImageData(0, 0, canvasW, canvasH);
@@ -304,14 +297,14 @@ async function generateAll() {
       // ==================== ANIME VFX HELPER FUNCTIONS ====================
       function drawAnimeKiAura(ctx, x, y, w, h, t, color1, color2) {
         ctx.save();
-        for (let i = 0; i < 14; i++) {
-          const px = x + ((i * 37 + t * 50) % w);
-          const pLife = (t * 2 + i * 0.15) % 1;
-          const py = y + h - pLife * (h * 1.1);
-          const pSize = (1 - pLife) * 6 + 2;
+        for (let i = 0; i < 12; i++) {
+          const px = x + ((i * 37 + t * 45) % w);
+          const pLife = (t * 1.8 + i * 0.16) % 1;
+          const py = y + h - pLife * (h * 1.05);
+          const pSize = (1 - pLife) * 5 + 2;
           ctx.fillStyle = (i % 2 === 0) ? color1 : color2;
           ctx.shadowColor = color1;
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 10;
           ctx.beginPath();
           ctx.arc(px, py, pSize, 0, 2 * Math.PI);
           ctx.fill();
@@ -327,19 +320,17 @@ async function generateAll() {
         ctx.translate(x, y);
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 14;
 
-        // 8-point Anime Cross Star
         ctx.beginPath();
-        ctx.moveTo(0, -s * 1.4);
-        ctx.quadraticCurveTo(0, 0, s * 1.4, 0);
-        ctx.quadraticCurveTo(0, 0, 0, s * 1.4);
-        ctx.quadraticCurveTo(0, 0, -s * 1.4, 0);
-        ctx.quadraticCurveTo(0, 0, 0, -s * 1.4);
+        ctx.moveTo(0, -s * 1.3);
+        ctx.quadraticCurveTo(0, 0, s * 1.3, 0);
+        ctx.quadraticCurveTo(0, 0, 0, s * 1.3);
+        ctx.quadraticCurveTo(0, 0, -s * 1.3, 0);
+        ctx.quadraticCurveTo(0, 0, 0, -s * 1.3);
         ctx.fill();
 
-        // 45-degree diagonal rays
-        const ds = s * 0.7;
+        const ds = s * 0.65;
         ctx.beginPath();
         ctx.moveTo(0, -ds);
         ctx.lineTo(ds, 0);
@@ -348,9 +339,8 @@ async function generateAll() {
         ctx.closePath();
         ctx.fill();
 
-        // Central white core
         ctx.beginPath();
-        ctx.arc(0, 0, s * 0.3, 0, 2 * Math.PI);
+        ctx.arc(0, 0, s * 0.25, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
       }
@@ -358,16 +348,16 @@ async function generateAll() {
       function drawAnimeSlashStreak(ctx, x1, y1, x2, y2, color1, color2) {
         ctx.save();
         ctx.strokeStyle = color1;
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 5;
         ctx.shadowColor = color1;
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
 
         ctx.strokeStyle = color2;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -378,9 +368,9 @@ async function generateAll() {
       function drawAnimeLightning(ctx, x1, y1, x2, y2, t, color) {
         ctx.save();
         ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         ctx.shadowColor = color;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
 
@@ -388,7 +378,7 @@ async function generateAll() {
         for (let s = 1; s < steps; s++) {
           const ratio = s / steps;
           const cx = x1 + (x2 - x1) * ratio;
-          const cy = y1 + (y2 - y1) * ratio + Math.sin((t * 6 + s * 1.5) * Math.PI) * 16;
+          const cy = y1 + (y2 - y1) * ratio + Math.sin((t * 5 + s * 1.5) * Math.PI) * 14;
           ctx.lineTo(cx, cy);
         }
         ctx.lineTo(x2, y2);
@@ -400,17 +390,15 @@ async function generateAll() {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(t * 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 12;
-        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 2;
 
-        // Outer rune ring
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, 2 * Math.PI);
         ctx.stroke();
 
-        // Inner interlocking triangles (Hexagram)
         for (let tri = 0; tri < 2; tri++) {
           ctx.beginPath();
           const rot = tri * Math.PI;
@@ -432,11 +420,11 @@ async function generateAll() {
         const count = 8;
         const bW = 5;
         for (let b = 0; b < count; b++) {
-          const ratio = Math.abs(Math.sin((t * 4 + b * 0.4) * Math.PI));
-          const barH = 16 + ratio * (h * 0.55);
+          const ratio = Math.abs(Math.sin((t * 3.5 + b * 0.4) * Math.PI));
+          const barH = 14 + ratio * (h * 0.5);
           ctx.fillStyle = b < 5 ? '#fbbf24' : '#f97316';
           ctx.shadowColor = b < 5 ? '#f59e0b' : '#ea580c';
-          ctx.shadowBlur = 10;
+          ctx.shadowBlur = 8;
           ctx.beginPath();
           ctx.roundRect(x + 10 + b * (bW + 4), y + h * 0.75 - barH / 2, bW, barH, 2.5);
           ctx.fill();
@@ -459,9 +447,9 @@ async function generateAll() {
           const sy = Math.sin(angle) * r;
           ctx.fillStyle = '#22d3ee';
           ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = 12;
           ctx.beginPath();
-          ctx.arc(sx, sy, 5.5, 0, 2 * Math.PI);
+          ctx.arc(sx, sy, 5, 0, 2 * Math.PI);
           ctx.fill();
         }
         ctx.restore();
@@ -473,7 +461,7 @@ async function generateAll() {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2;
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.moveTo(scanX, y + 4);
         ctx.lineTo(scanX, y + h - 4);
@@ -489,7 +477,7 @@ async function generateAll() {
       const data = new Uint8Array(frames[f].data);
       const opaque = [];
       for (let p = 0; p < data.length; p += 4) {
-        if (data[p + 3] >= 24) {
+        if (data[p + 3] >= 20) {
           opaque.push(Math.max(1, data[p]), Math.max(1, data[p + 1]), Math.max(1, data[p + 2]), 255);
         }
       }
@@ -499,7 +487,7 @@ async function generateAll() {
 
       const index = new Uint8Array(w * h);
       for (let p = 0, px = 0; p < data.length; p += 4, px++) {
-        if (data[p + 3] < 24) {
+        if (data[p + 3] < 20) {
           index[px] = 0; // Transparent
         } else {
           const r = Math.max(1, data[p]), g = Math.max(1, data[p + 1]), b = Math.max(1, data[p + 2]);
@@ -536,7 +524,7 @@ async function generateAll() {
   }
 
   await browser.close();
-  console.log(`\n🎉 All ${BADGES.length} Anime-Style transparent animated GIF badges generated!`);
+  console.log(`\n🎉 All ${BADGES.length} 3D Anime-Style transparent animated GIF badges generated!`);
 }
 
 generateAll().catch(console.error);
